@@ -1,6 +1,7 @@
 package com.cotejador.app.core.cotejo;
 
 import com.cotejador.app.core.model.Gallo;
+import com.cotejador.app.core.model.RestriccionPartido;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -115,6 +116,9 @@ public class MotorCotejo {
         if (nombresPartidosCoinciden(gallo, rival, parametros)) {
             return false;
         }
+        if (existeRestriccionManualProhibida(gallo, rival, parametros)) {
+            return false;
+        }
         return diferenciaPeso(gallo, rival) <= parametros.getToleranciaGramos();
     }
 
@@ -122,6 +126,16 @@ public class MotorCotejo {
         String nombrePartido = parametros.getNombresPartidos().get(gallo.getPartidoId());
         String nombreRival = parametros.getNombresPartidos().get(rival.getPartidoId());
         return comparadorNombresPartido.coinciden(nombrePartido, nombreRival);
+    }
+
+    private boolean existeRestriccionManualProhibida(Gallo gallo, Gallo rival, ParametrosCotejo parametros) {
+        for (RestriccionPartido restriccion : parametros.getRestriccionesPartidos()) {
+            if (RestriccionPartido.TIPO_PROHIBIDO.equals(restriccion.getTipo())
+                    && restriccion.aplicaEntre(gallo.getPartidoId(), rival.getPartidoId())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean estaUsado(Gallo gallo, Set<Gallo> gallosUsados, Set<Long> galloIdsUsados) {

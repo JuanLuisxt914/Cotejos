@@ -4,6 +4,7 @@ import com.cotejador.app.data.sqlite.DatabaseInitializer;
 import com.cotejador.app.data.sqlite.EventoRepository;
 import com.cotejador.app.data.sqlite.GalloRepository;
 import com.cotejador.app.data.sqlite.PartidoRepository;
+import com.cotejador.app.data.sqlite.RestriccionPartidoRepository;
 import com.cotejador.app.data.sqlite.SQLiteConnectionFactory;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -17,9 +18,15 @@ public class MainApp extends Application {
         EventoRepository eventoRepository = new EventoRepository(connectionFactory);
         PartidoRepository partidoRepository = new PartidoRepository(connectionFactory);
         GalloRepository galloRepository = new GalloRepository(connectionFactory);
-        MainController controller = new MainController(eventoRepository, partidoRepository, galloRepository);
+        RestriccionPartidoRepository restriccionPartidoRepository =
+                new RestriccionPartidoRepository(connectionFactory);
+        MainController controller = new MainController(
+                eventoRepository,
+                partidoRepository,
+                galloRepository,
+                restriccionPartidoRepository);
 
-        Scene scene = new Scene(controller.createView(), 1180, 560);
+        Scene scene = new Scene(controller.createView(), 1380, 600);
 
         primaryStage.setTitle("Cotejador");
         primaryStage.setScene(scene);

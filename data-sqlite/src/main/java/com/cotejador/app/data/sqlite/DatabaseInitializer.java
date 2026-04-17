@@ -29,6 +29,26 @@ public class DatabaseInitializer {
                     "partido_id INTEGER NOT NULL, " +
                     "FOREIGN KEY (partido_id) REFERENCES partidos(id) ON DELETE CASCADE" +
                     ")";
+    private static final String CREATE_RESTRICCIONES_PARTIDOS_TABLE =
+            "CREATE TABLE IF NOT EXISTS restricciones_partidos (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "evento_id INTEGER NOT NULL, " +
+                    "partido_origen_id INTEGER NOT NULL, " +
+                    "partido_destino_id INTEGER NOT NULL, " +
+                    "tipo TEXT NOT NULL, " +
+                    "CHECK (partido_origen_id <> partido_destino_id), " +
+                    "FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (partido_origen_id) REFERENCES partidos(id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (partido_destino_id) REFERENCES partidos(id) ON DELETE CASCADE" +
+                    ")";
+    private static final String CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX =
+            "CREATE UNIQUE INDEX IF NOT EXISTS ux_restricciones_partidos_logica " +
+                    "ON restricciones_partidos (" +
+                    "evento_id, " +
+                    "tipo, " +
+                    "CASE WHEN partido_origen_id < partido_destino_id THEN partido_origen_id ELSE partido_destino_id END, " +
+                    "CASE WHEN partido_origen_id < partido_destino_id THEN partido_destino_id ELSE partido_origen_id END" +
+                    ")";
 
     private final SQLiteConnectionFactory connectionFactory;
 
@@ -42,6 +62,8 @@ public class DatabaseInitializer {
             statement.execute(CREATE_EVENTOS_TABLE);
             statement.execute(CREATE_PARTIDOS_TABLE);
             statement.execute(CREATE_GALLOS_TABLE);
+            statement.execute(CREATE_RESTRICCIONES_PARTIDOS_TABLE);
+            statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
             if (schemaNeedsMigration(connection)) {
                 migrateSchema(connection);
             }
@@ -73,6 +95,8 @@ public class DatabaseInitializer {
             statement.execute(CREATE_EVENTOS_TABLE);
             statement.execute(CREATE_PARTIDOS_TABLE);
             statement.execute(CREATE_GALLOS_TABLE);
+            statement.execute(CREATE_RESTRICCIONES_PARTIDOS_TABLE);
+            statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
 
             statement.execute("INSERT INTO eventos (id, nombre, fecha, modalidad) " +
                     "SELECT id, nombre, COALESCE(fecha, ''), COALESCE(modalidad, '') FROM eventos_old");

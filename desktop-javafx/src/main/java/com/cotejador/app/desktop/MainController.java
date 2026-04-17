@@ -7,13 +7,16 @@ import com.cotejador.app.core.cotejo.ResultadoCotejo;
 import com.cotejador.app.core.model.Evento;
 import com.cotejador.app.core.model.Gallo;
 import com.cotejador.app.core.model.Partido;
+import com.cotejador.app.core.model.RestriccionPartido;
 import com.cotejador.app.data.sqlite.EventoRepository;
 import com.cotejador.app.data.sqlite.GalloRepository;
 import com.cotejador.app.data.sqlite.PartidoRepository;
+import com.cotejador.app.data.sqlite.RestriccionPartidoRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -22,12 +25,14 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainController {
     private final EventoRepository eventoRepository;
     private final PartidoRepository partidoRepository;
     private final GalloRepository galloRepository;
+    private final RestriccionPartidoRepository restriccionPartidoRepository;
     private final MotorCotejo motorCotejo = new MotorCotejo();
 
     private final ObservableList<Evento> eventos = FXCollections.observableArrayList();
@@ -35,12 +40,17 @@ public class MainController {
     private final ObservableList<Gallo> gallos = FXCollections.observableArrayList();
     private final ObservableList<Pelea> peleasCotejo = FXCollections.observableArrayList();
     private final ObservableList<Gallo> gallosSinPelea = FXCollections.observableArrayList();
+    private final ObservableList<RestriccionPartido> restricciones = FXCollections.observableArrayList();
 
     private final ListView<Evento> eventList = new ListView<Evento>(eventos);
     private final ListView<Partido> partidoList = new ListView<Partido>(partidos);
     private final ListView<Gallo> galloList = new ListView<Gallo>(gallos);
     private final ListView<Pelea> peleasCotejoList = new ListView<Pelea>(peleasCotejo);
     private final ListView<Gallo> gallosSinPeleaList = new ListView<Gallo>(gallosSinPelea);
+    private final ListView<RestriccionPartido> restriccionList =
+            new ListView<RestriccionPartido>(restricciones);
+    private final ComboBox<Partido> restriccionPartidoOrigenCombo = new ComboBox<Partido>(partidos);
+    private final ComboBox<Partido> restriccionPartidoDestinoCombo = new ComboBox<Partido>(partidos);
 
     private final TextField eventoNombreField = new TextField();
     private final TextField eventoFechaField = new TextField();
@@ -54,10 +64,12 @@ public class MainController {
 
     public MainController(EventoRepository eventoRepository,
                           PartidoRepository partidoRepository,
-                          GalloRepository galloRepository) {
+                          GalloRepository galloRepository,
+                          RestriccionPartidoRepository restriccionPartidoRepository) {
         this.eventoRepository = eventoRepository;
         this.partidoRepository = partidoRepository;
         this.galloRepository = galloRepository;
+        this.restriccionPartidoRepository = restriccionPartidoRepository;
     }
 
     public Parent createView() throws Exception {
@@ -75,6 +87,8 @@ public class MainController {
         Button editarGalloButton = new Button("Editar gallo");
         Button eliminarGalloButton = new Button("Eliminar gallo");
         Button cotejarButton = new Button("Cotejar");
+        Button agregarRestriccionButton = new Button("Agregar restriccion");
+        Button eliminarRestriccionButton = new Button("Eliminar restriccion");
 
         crearEventoButton.setOnAction(event -> crearEvento());
         editarEventoButton.setOnAction(event -> editarEvento());
@@ -86,6 +100,8 @@ public class MainController {
         editarGalloButton.setOnAction(event -> editarGallo());
         eliminarGalloButton.setOnAction(event -> eliminarGallo());
         cotejarButton.setOnAction(event -> cotejarEventoSeleccionado());
+        agregarRestriccionButton.setOnAction(event -> agregarRestriccion());
+        eliminarRestriccionButton.setOnAction(event -> eliminarRestriccion());
 
         VBox eventBox = new VBox(6,
                 new Label("Eventos"),
@@ -121,17 +137,27 @@ public class MainController {
                 new Label("Gallos sin pelea"),
                 gallosSinPeleaList
         );
+        VBox restriccionBox = new VBox(6,
+                new Label("Restricciones"),
+                restriccionPartidoOrigenCombo,
+                restriccionPartidoDestinoCombo,
+                agregarRestriccionButton,
+                eliminarRestriccionButton,
+                restriccionList
+        );
 
-        HBox content = new HBox(10, eventBox, partidoBox, galloBox, cotejoBox);
+        HBox content = new HBox(10, eventBox, partidoBox, galloBox, cotejoBox, restriccionBox);
         HBox.setHgrow(eventBox, Priority.ALWAYS);
         HBox.setHgrow(partidoBox, Priority.ALWAYS);
         HBox.setHgrow(galloBox, Priority.ALWAYS);
         HBox.setHgrow(cotejoBox, Priority.ALWAYS);
+        HBox.setHgrow(restriccionBox, Priority.ALWAYS);
         VBox.setVgrow(eventList, Priority.ALWAYS);
         VBox.setVgrow(partidoList, Priority.ALWAYS);
         VBox.setVgrow(galloList, Priority.ALWAYS);
         VBox.setVgrow(peleasCotejoList, Priority.ALWAYS);
         VBox.setVgrow(gallosSinPeleaList, Priority.ALWAYS);
+        VBox.setVgrow(restriccionList, Priority.ALWAYS);
 
         return new VBox(10, new Label("Cotejador"), content, statusLabel);
     }
@@ -145,6 +171,8 @@ public class MainController {
         galloPesoField.setPromptText("Peso en gramos");
         galloAnilloField.setPromptText("Anillo");
         toleranciaField.setPromptText("Tolerancia en gramos");
+        restriccionPartidoOrigenCombo.setPromptText("Partido 1");
+        restriccionPartidoDestinoCombo.setPromptText("Partido 2");
     }
 
     private void configureSelectionListeners() {
@@ -152,13 +180,16 @@ public class MainController {
             try {
                 partidos.clear();
                 gallos.clear();
+                restricciones.clear();
                 clearCotejoResults();
                 clearPartidoFields();
                 clearGalloFields();
+                clearRestriccionFields();
 
                 if (selectedEvent != null) {
                     fillEventoFields(selectedEvent);
                     partidos.setAll(partidoRepository.listarPorEvento(selectedEvent.getId()));
+                    loadRestricciones(selectedEvent.getId());
                 } else {
                     clearEventoFields();
                 }
@@ -245,10 +276,12 @@ public class MainController {
             loadEventos(null);
             partidos.clear();
             gallos.clear();
+            restricciones.clear();
             clearCotejoResults();
             clearEventoFields();
             clearPartidoFields();
             clearGalloFields();
+            clearRestriccionFields();
             statusLabel.setText("Evento eliminado.");
         } catch (Exception exception) {
             showError("Error al eliminar evento", exception);
@@ -272,6 +305,7 @@ public class MainController {
             Partido partido = new Partido(null, nombre, selectedEvent.getId());
             partidoRepository.insertar(partido);
             loadPartidos(selectedEvent.getId(), partido.getId());
+            loadRestricciones(selectedEvent.getId());
             clearCotejoResults();
             clearPartidoFields();
             statusLabel.setText("Partido agregado.");
@@ -302,6 +336,7 @@ public class MainController {
             Partido partido = new Partido(selectedPartido.getId(), nombre, selectedEvent.getId());
             partidoRepository.actualizar(partido);
             loadPartidos(selectedEvent.getId(), partido.getId());
+            loadRestricciones(selectedEvent.getId());
             clearCotejoResults();
             clearPartidoFields();
             statusLabel.setText("Partido actualizado.");
@@ -325,10 +360,12 @@ public class MainController {
 
             partidoRepository.eliminar(selectedPartido.getId());
             loadPartidos(selectedEvent.getId(), null);
+            loadRestricciones(selectedEvent.getId());
             gallos.clear();
             clearCotejoResults();
             clearPartidoFields();
             clearGalloFields();
+            clearRestriccionFields();
             statusLabel.setText("Partido eliminado.");
         } catch (Exception exception) {
             showError("Error al eliminar partido", exception);
@@ -469,7 +506,9 @@ public class MainController {
             }
 
             Map<Long, String> nombresPartidos = loadNombresPartidosDelEvento(selectedEvent);
-            ParametrosCotejo parametros = readParametrosCotejo(nombresPartidos);
+            List<RestriccionPartido> restriccionesPartidos =
+                    restriccionPartidoRepository.listarPorEvento(selectedEvent.getId());
+            ParametrosCotejo parametros = readParametrosCotejo(nombresPartidos, restriccionesPartidos);
             if (parametros == null) {
                 return;
             }
@@ -484,7 +523,8 @@ public class MainController {
         }
     }
 
-    private ParametrosCotejo readParametrosCotejo(Map<Long, String> nombresPartidos) {
+    private ParametrosCotejo readParametrosCotejo(Map<Long, String> nombresPartidos,
+                                                  List<RestriccionPartido> restriccionesPartidos) {
         String toleranciaText = toleranciaField.getText().trim();
         if (toleranciaText.isEmpty()) {
             statusLabel.setText("La tolerancia es obligatoria.");
@@ -504,7 +544,80 @@ public class MainController {
             return null;
         }
 
-        return new ParametrosCotejo(tolerancia, nombresPartidos);
+        return new ParametrosCotejo(tolerancia, nombresPartidos, restriccionesPartidos);
+    }
+
+    private void agregarRestriccion() {
+        try {
+            Evento selectedEvent = eventList.getSelectionModel().getSelectedItem();
+            if (selectedEvent == null) {
+                statusLabel.setText("Selecciona un evento antes de agregar una restriccion.");
+                return;
+            }
+
+            Partido origen = restriccionPartidoOrigenCombo.getSelectionModel().getSelectedItem();
+            Partido destino = restriccionPartidoDestinoCombo.getSelectionModel().getSelectedItem();
+            if (origen == null || destino == null) {
+                statusLabel.setText("Selecciona los dos partidos para la restriccion.");
+                return;
+            }
+            if (origen.getId().equals(destino.getId())) {
+                statusLabel.setText("No puedes restringir un partido contra si mismo.");
+                return;
+            }
+            if (existeRestriccionLogica(origen.getId(), destino.getId())) {
+                statusLabel.setText("Ya existe una restriccion entre esos partidos.");
+                return;
+            }
+
+            RestriccionPartido restriccion = new RestriccionPartido(
+                    null,
+                    selectedEvent.getId(),
+                    origen.getId(),
+                    destino.getId(),
+                    RestriccionPartido.TIPO_PROHIBIDO
+            );
+            restriccionPartidoRepository.insertar(restriccion);
+            loadRestricciones(selectedEvent.getId());
+            clearCotejoResults();
+            clearRestriccionFields();
+            statusLabel.setText("Restriccion agregada.");
+        } catch (Exception exception) {
+            showError("Error al agregar restriccion", exception);
+        }
+    }
+
+    private void eliminarRestriccion() {
+        try {
+            Evento selectedEvent = eventList.getSelectionModel().getSelectedItem();
+            RestriccionPartido selectedRestriccion = restriccionList.getSelectionModel().getSelectedItem();
+            if (selectedEvent == null) {
+                statusLabel.setText("Selecciona un evento.");
+                return;
+            }
+            if (selectedRestriccion == null) {
+                statusLabel.setText("Selecciona una restriccion para eliminar.");
+                return;
+            }
+
+            restriccionPartidoRepository.eliminar(selectedRestriccion.getId());
+            loadRestricciones(selectedEvent.getId());
+            clearCotejoResults();
+            clearRestriccionFields();
+            statusLabel.setText("Restriccion eliminada.");
+        } catch (Exception exception) {
+            showError("Error al eliminar restriccion", exception);
+        }
+    }
+
+    private boolean existeRestriccionLogica(Long partidoId1, Long partidoId2) {
+        for (RestriccionPartido restriccion : restricciones) {
+            if (RestriccionPartido.TIPO_PROHIBIDO.equals(restriccion.getTipo())
+                    && restriccion.aplicaEntre(partidoId1, partidoId2)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private java.util.List<Gallo> loadGallosDelEvento(Evento evento) throws Exception {
@@ -538,6 +651,10 @@ public class MainController {
     private void loadGallos(Long partidoId, Long selectedId) throws Exception {
         gallos.setAll(galloRepository.listarPorPartido(partidoId));
         selectGalloById(selectedId);
+    }
+
+    private void loadRestricciones(Long eventoId) throws Exception {
+        restricciones.setAll(restriccionPartidoRepository.listarPorEvento(eventoId));
     }
 
     private void fillEventoFields(Evento evento) {
@@ -575,6 +692,12 @@ public class MainController {
     private void clearCotejoResults() {
         peleasCotejo.clear();
         gallosSinPelea.clear();
+    }
+
+    private void clearRestriccionFields() {
+        restriccionPartidoOrigenCombo.getSelectionModel().clearSelection();
+        restriccionPartidoDestinoCombo.getSelectionModel().clearSelection();
+        restriccionList.getSelectionModel().clearSelection();
     }
 
     private void selectEventoById(Long id) {

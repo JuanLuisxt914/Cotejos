@@ -1,8 +1,10 @@
 package com.cotejador.app.core.cotejo;
 
 import com.cotejador.app.core.model.Gallo;
+import com.cotejador.app.core.model.RestriccionPartido;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -230,8 +232,76 @@ public class MotorCotejoTest {
         assertIds(resultado.getGallosSinPelea(), 2L);
     }
 
+    @Test
+    public void restriccionManualProhibeEnfrentamientoAunqueElPesoSeaValido() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L)
+                ),
+                parametrosConRestricciones(5, restriccion(10L, 20L))
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L, 2L);
+    }
+
+    @Test
+    public void restriccionManualFuncionaEnAmbosSentidos() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 20L),
+                        gallo(2L, "B", 1001, 10L)
+                ),
+                parametrosConRestricciones(5, restriccion(10L, 20L))
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L, 2L);
+    }
+
+    @Test
+    public void sinRestriccionManualSigueAplicandoLaLogicaActual() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L)
+                ),
+                parametrosConRestricciones(5)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 2L, 1);
+    }
+
+    @Test
+    public void siElRivalMasCercanoEstaProhibidoManualmenteEligeElSiguienteValido() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L),
+                        gallo(3L, "C", 1003, 30L)
+                ),
+                parametrosConRestricciones(5, restriccion(10L, 20L))
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 3L, 3);
+        assertIds(resultado.getGallosSinPelea(), 2L);
+    }
+
     private Gallo gallo(Long id, String nombre, double peso, Long partidoId) {
         return new Gallo(id, nombre, peso, "", partidoId);
+    }
+
+    private RestriccionPartido restriccion(Long partidoOrigenId, Long partidoDestinoId) {
+        return new RestriccionPartido(
+                null,
+                100L,
+                partidoOrigenId,
+                partidoDestinoId,
+                RestriccionPartido.TIPO_PROHIBIDO
+        );
     }
 
     private NombrePartido nombre(Long partidoId, String nombre) {
@@ -244,6 +314,14 @@ public class MotorCotejoTest {
             nombresPartidos.put(nombre.partidoId, nombre.nombre);
         }
         return new ParametrosCotejo(tolerancia, nombresPartidos);
+    }
+
+    private ParametrosCotejo parametrosConRestricciones(double tolerancia, RestriccionPartido... restricciones) {
+        return new ParametrosCotejo(
+                tolerancia,
+                Collections.<Long, String>emptyMap(),
+                new ArrayList<RestriccionPartido>(Arrays.asList(restricciones))
+        );
     }
 
     private void assertPelea(Pelea pelea, Long gallo1Id, Long gallo2Id, double diferencia) {
