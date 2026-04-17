@@ -21,6 +21,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainController {
     private final EventoRepository eventoRepository;
     private final PartidoRepository partidoRepository;
@@ -465,7 +468,8 @@ public class MainController {
                 return;
             }
 
-            ParametrosCotejo parametros = readParametrosCotejo();
+            Map<Long, String> nombresPartidos = loadNombresPartidosDelEvento(selectedEvent);
+            ParametrosCotejo parametros = readParametrosCotejo(nombresPartidos);
             if (parametros == null) {
                 return;
             }
@@ -480,7 +484,7 @@ public class MainController {
         }
     }
 
-    private ParametrosCotejo readParametrosCotejo() {
+    private ParametrosCotejo readParametrosCotejo(Map<Long, String> nombresPartidos) {
         String toleranciaText = toleranciaField.getText().trim();
         if (toleranciaText.isEmpty()) {
             statusLabel.setText("La tolerancia es obligatoria.");
@@ -500,7 +504,7 @@ public class MainController {
             return null;
         }
 
-        return new ParametrosCotejo(tolerancia);
+        return new ParametrosCotejo(tolerancia, nombresPartidos);
     }
 
     private java.util.List<Gallo> loadGallosDelEvento(Evento evento) throws Exception {
@@ -510,6 +514,15 @@ public class MainController {
             gallosDelEvento.addAll(galloRepository.listarPorPartido(partido.getId()));
         }
         return gallosDelEvento;
+    }
+
+    private Map<Long, String> loadNombresPartidosDelEvento(Evento evento) throws Exception {
+        Map<Long, String> nombresPartidos = new HashMap<Long, String>();
+        java.util.List<Partido> partidosDelEvento = partidoRepository.listarPorEvento(evento.getId());
+        for (Partido partido : partidosDelEvento) {
+            nombresPartidos.put(partido.getId(), partido.getNombre());
+        }
+        return nombresPartidos;
     }
 
     private void loadEventos(Long selectedId) throws Exception {

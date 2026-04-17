@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 public class MotorCotejo {
+    private final ComparadorNombresPartido comparadorNombresPartido = new ComparadorNombresPartido();
+
     public ResultadoCotejo cotejar(List<Gallo> gallos, ParametrosCotejo parametros) {
         if (gallos == null) {
             throw new IllegalArgumentException("La lista de gallos es obligatoria.");
@@ -110,7 +112,16 @@ public class MotorCotejo {
         if (gallo.getPartidoId() != null && gallo.getPartidoId().equals(rival.getPartidoId())) {
             return false;
         }
+        if (nombresPartidosCoinciden(gallo, rival, parametros)) {
+            return false;
+        }
         return diferenciaPeso(gallo, rival) <= parametros.getToleranciaGramos();
+    }
+
+    private boolean nombresPartidosCoinciden(Gallo gallo, Gallo rival, ParametrosCotejo parametros) {
+        String nombrePartido = parametros.getNombresPartidos().get(gallo.getPartidoId());
+        String nombreRival = parametros.getNombresPartidos().get(rival.getPartidoId());
+        return comparadorNombresPartido.coinciden(nombrePartido, nombreRival);
     }
 
     private boolean estaUsado(Gallo gallo, Set<Gallo> gallosUsados, Set<Long> galloIdsUsados) {

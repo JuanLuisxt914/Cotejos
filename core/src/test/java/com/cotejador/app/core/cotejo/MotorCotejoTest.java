@@ -5,8 +5,10 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -151,8 +153,97 @@ public class MotorCotejoTest {
         assertIds(resultado.getGallosSinPelea(), 3L);
     }
 
+    @Test
+    public void nombresDePartidosExactamenteIgualesQuedanProhibidos() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L)
+                ),
+                parametrosConNombres(5, nombre(10L, "Alcoyonqui"), nombre(20L, "Alcoyonqui"))
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L, 2L);
+    }
+
+    @Test
+    public void nombresDePartidosConCoincidenciaSignificativaQuedanProhibidos() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L)
+                ),
+                parametrosConNombres(5, nombre(10L, "Alcoyonqui MR"), nombre(20L, "Alcoyonqui MT"))
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L, 2L);
+    }
+
+    @Test
+    public void nombresDePartidosSinCoincidenciaSignificativaSePermiten() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L)
+                ),
+                parametrosConNombres(5, nombre(10L, "Alcoyonqui MR"), nombre(20L, "San Pedro MT"))
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 2L, 1);
+    }
+
+    @Test
+    public void palabrasComunesIgnoradasNoBloqueanPorSiSolas() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L)
+                ),
+                parametrosConNombres(5, nombre(10L, "El Sol"), nombre(20L, "La Luna"))
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 2L, 1);
+    }
+
+    @Test
+    public void siElRivalMasCercanoEstaBloqueadoPorNombreEligeElSiguienteValido() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L),
+                        gallo(3L, "C", 1003, 30L)
+                ),
+                parametrosConNombres(
+                        5,
+                        nombre(10L, "Alcoyonqui MR"),
+                        nombre(20L, "Alcoyonqui MT"),
+                        nombre(30L, "San Pedro")
+                )
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 3L, 3);
+        assertIds(resultado.getGallosSinPelea(), 2L);
+    }
+
     private Gallo gallo(Long id, String nombre, double peso, Long partidoId) {
         return new Gallo(id, nombre, peso, "", partidoId);
+    }
+
+    private NombrePartido nombre(Long partidoId, String nombre) {
+        return new NombrePartido(partidoId, nombre);
+    }
+
+    private ParametrosCotejo parametrosConNombres(double tolerancia, NombrePartido... nombres) {
+        Map<Long, String> nombresPartidos = new HashMap<Long, String>();
+        for (NombrePartido nombre : nombres) {
+            nombresPartidos.put(nombre.partidoId, nombre.nombre);
+        }
+        return new ParametrosCotejo(tolerancia, nombresPartidos);
     }
 
     private void assertPelea(Pelea pelea, Long gallo1Id, Long gallo2Id, double diferencia) {
@@ -179,6 +270,16 @@ public class MotorCotejoTest {
             assertTrue("Id repetido en peleas: " + pelea.getGallo1().getId(), ids.add(pelea.getGallo1().getId()));
             assertTrue("Id repetido en peleas: " + pelea.getGallo2().getId(), ids.add(pelea.getGallo2().getId()));
             assertFalse(pelea.getGallo1().getId().equals(pelea.getGallo2().getId()));
+        }
+    }
+
+    private static class NombrePartido {
+        private final Long partidoId;
+        private final String nombre;
+
+        private NombrePartido(Long partidoId, String nombre) {
+            this.partidoId = partidoId;
+            this.nombre = nombre;
         }
     }
 }
