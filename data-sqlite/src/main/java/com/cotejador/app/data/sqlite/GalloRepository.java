@@ -15,6 +15,8 @@ public class GalloRepository {
             "INSERT INTO gallos (nombre, peso, anillo, partido_id) VALUES (?, ?, ?, ?)";
     private static final String SELECT_GALLOS_BY_PARTIDO =
             "SELECT id, nombre, peso, anillo, partido_id FROM gallos WHERE partido_id = ? ORDER BY id";
+    private static final String SELECT_GALLO_BY_ID =
+            "SELECT id, nombre, peso, anillo, partido_id FROM gallos WHERE id = ?";
     private static final String UPDATE_GALLO =
             "UPDATE gallos SET nombre = ?, peso = ?, anillo = ? WHERE id = ?";
     private static final String DELETE_GALLO =
@@ -64,6 +66,27 @@ public class GalloRepository {
         }
 
         return gallos;
+    }
+
+    public Gallo buscarPorId(Long id) throws SQLException {
+        try (Connection connection = connectionFactory.getConnection();
+             PreparedStatement statement = connection.prepareStatement(SELECT_GALLO_BY_ID)) {
+            statement.setLong(1, id);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new Gallo(
+                            resultSet.getLong("id"),
+                            resultSet.getString("nombre"),
+                            resultSet.getDouble("peso"),
+                            resultSet.getString("anillo"),
+                            resultSet.getLong("partido_id")
+                    );
+                }
+            }
+        }
+
+        return null;
     }
 
     public void actualizar(Gallo gallo) throws SQLException {

@@ -5,6 +5,7 @@ import com.cotejador.app.data.sqlite.CotejoRepository;
 import com.cotejador.app.data.sqlite.EventoRepository;
 import com.cotejador.app.data.sqlite.GalloRepository;
 import com.cotejador.app.data.sqlite.PartidoRepository;
+import com.cotejador.app.data.sqlite.PdfCotejoService;
 import com.cotejador.app.data.sqlite.RestriccionPartidoRepository;
 import com.cotejador.app.data.sqlite.SQLiteConnectionFactory;
 import javafx.application.Application;
@@ -20,6 +21,11 @@ public class MainApp extends Application {
         PartidoRepository partidoRepository = new PartidoRepository(connectionFactory);
         GalloRepository galloRepository = new GalloRepository(connectionFactory);
         CotejoRepository cotejoRepository = new CotejoRepository(connectionFactory);
+        PdfCotejoService pdfCotejoService = new PdfCotejoService(
+                cotejoRepository,
+                eventoRepository,
+                partidoRepository,
+                galloRepository);
         RestriccionPartidoRepository restriccionPartidoRepository =
                 new RestriccionPartidoRepository(connectionFactory);
         MainController controller = new MainController(
@@ -27,6 +33,7 @@ public class MainApp extends Application {
                 partidoRepository,
                 galloRepository,
                 cotejoRepository,
+                pdfCotejoService,
                 restriccionPartidoRepository);
 
         Scene scene = new Scene(controller.createView(), 1380, 600);

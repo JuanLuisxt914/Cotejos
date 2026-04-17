@@ -15,6 +15,8 @@ public class EventoRepository {
             "INSERT INTO eventos (nombre, fecha, modalidad) VALUES (?, ?, ?)";
     private static final String SELECT_EVENTOS =
             "SELECT id, nombre, fecha, modalidad FROM eventos ORDER BY id";
+    private static final String SELECT_EVENTO_BY_ID =
+            "SELECT id, nombre, fecha, modalidad FROM eventos WHERE id = ?";
     private static final String UPDATE_EVENTO =
             "UPDATE eventos SET nombre = ?, fecha = ?, modalidad = ? WHERE id = ?";
     private static final String DELETE_EVENTO =
@@ -59,6 +61,26 @@ public class EventoRepository {
         }
 
         return eventos;
+    }
+
+    public Evento buscarPorId(Long id) throws SQLException {
+        try (Connection connection = connectionFactory.getConnection();
+             PreparedStatement statement = connection.prepareStatement(SELECT_EVENTO_BY_ID)) {
+            statement.setLong(1, id);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new Evento(
+                            resultSet.getLong("id"),
+                            resultSet.getString("nombre"),
+                            resultSet.getString("fecha"),
+                            resultSet.getString("modalidad")
+                    );
+                }
+            }
+        }
+
+        return null;
     }
 
     public void actualizar(Evento evento) throws SQLException {

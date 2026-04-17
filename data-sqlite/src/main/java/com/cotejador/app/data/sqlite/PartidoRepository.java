@@ -15,6 +15,8 @@ public class PartidoRepository {
             "INSERT INTO partidos (nombre, evento_id) VALUES (?, ?)";
     private static final String SELECT_PARTIDOS_BY_EVENTO =
             "SELECT id, nombre, evento_id FROM partidos WHERE evento_id = ? ORDER BY id";
+    private static final String SELECT_PARTIDO_BY_ID =
+            "SELECT id, nombre, evento_id FROM partidos WHERE id = ?";
     private static final String UPDATE_PARTIDO =
             "UPDATE partidos SET nombre = ? WHERE id = ?";
     private static final String DELETE_PARTIDO =
@@ -60,6 +62,25 @@ public class PartidoRepository {
         }
 
         return partidos;
+    }
+
+    public Partido buscarPorId(Long id) throws SQLException {
+        try (Connection connection = connectionFactory.getConnection();
+             PreparedStatement statement = connection.prepareStatement(SELECT_PARTIDO_BY_ID)) {
+            statement.setLong(1, id);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new Partido(
+                            resultSet.getLong("id"),
+                            resultSet.getString("nombre"),
+                            resultSet.getLong("evento_id")
+                    );
+                }
+            }
+        }
+
+        return null;
     }
 
     public void actualizar(Partido partido) throws SQLException {

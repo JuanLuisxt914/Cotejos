@@ -17,6 +17,7 @@ import com.cotejador.app.data.sqlite.CotejoRepository;
 import com.cotejador.app.data.sqlite.EventoRepository;
 import com.cotejador.app.data.sqlite.GalloRepository;
 import com.cotejador.app.data.sqlite.PartidoRepository;
+import com.cotejador.app.data.sqlite.PdfCotejoService;
 import com.cotejador.app.data.sqlite.RestriccionPartidoRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,19 +30,24 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.time.LocalDateTime;
+import java.nio.file.Path;
 
 public class MainController {
     private final EventoRepository eventoRepository;
     private final PartidoRepository partidoRepository;
     private final GalloRepository galloRepository;
     private final CotejoRepository cotejoRepository;
+    private final PdfCotejoService pdfCotejoService;
     private final RestriccionPartidoRepository restriccionPartidoRepository;
     private final MotorCotejo motorCotejo = new MotorCotejo();
     private final OrdenadorPeleas ordenadorPeleas = new OrdenadorPeleas();
@@ -87,11 +93,13 @@ public class MainController {
                           PartidoRepository partidoRepository,
                           GalloRepository galloRepository,
                           CotejoRepository cotejoRepository,
+                          PdfCotejoService pdfCotejoService,
                           RestriccionPartidoRepository restriccionPartidoRepository) {
         this.eventoRepository = eventoRepository;
         this.partidoRepository = partidoRepository;
         this.galloRepository = galloRepository;
         this.cotejoRepository = cotejoRepository;
+        this.pdfCotejoService = pdfCotejoService;
         this.restriccionPartidoRepository = restriccionPartidoRepository;
     }
 
@@ -113,6 +121,7 @@ public class MainController {
         Button agregarRestriccionButton = new Button("Agregar restriccion");
         Button eliminarRestriccionButton = new Button("Eliminar restriccion");
         Button verCotejoGuardadoButton = new Button("Ver cotejo");
+        Button exportarPdfButton = new Button("Exportar PDF");
         Button eliminarCotejoGuardadoButton = new Button("Eliminar cotejo");
 
         crearEventoButton.setOnAction(event -> crearEvento());
@@ -128,6 +137,7 @@ public class MainController {
         agregarRestriccionButton.setOnAction(event -> agregarRestriccion());
         eliminarRestriccionButton.setOnAction(event -> eliminarRestriccion());
         verCotejoGuardadoButton.setOnAction(event -> verCotejoGuardado());
+        exportarPdfButton.setOnAction(event -> exportarPdfCotejoGuardado());
         eliminarCotejoGuardadoButton.setOnAction(event -> eliminarCotejoGuardado());
 
         VBox eventBox = new VBox(6,
@@ -176,7 +186,7 @@ public class MainController {
         VBox cotejosGuardadosBox = new VBox(6,
                 new Label("Cotejos guardados"),
                 cotejoGuardadoList,
-                new HBox(6, verCotejoGuardadoButton, eliminarCotejoGuardadoButton),
+                new HBox(6, verCotejoGuardadoButton, exportarPdfButton, eliminarCotejoGuardadoButton),
                 new Label("Peleas guardadas"),
                 peleaGuardadaList,
                 new Label("Gallos sin pelea guardados"),
@@ -647,6 +657,34 @@ public class MainController {
         }
     }
 
+    private void exportarPdfCotejoGuardado() {
+        try {
+            CotejoGuardado selectedCotejo = cotejoGuardadoList.getSelectionModel().getSelectedItem();
+            if (selectedCotejo == null) {
+                statusLabel.setText("Selecciona un cotejo guardado para exportar.");
+                return;
+            }
+
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Guardar PDF del cotejo");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF", "*.pdf"));
+            fileChooser.setInitialFileName("cotejo-" + selectedCotejo.getId() + ".pdf");
+
+            Stage stage = (Stage) cotejoGuardadoList.getScene().getWindow();
+            File selectedFile = fileChooser.showSaveDialog(stage);
+            if (selectedFile == null) {
+                statusLabel.setText("Exportacion cancelada.");
+                return;
+            }
+
+            File destino = ensurePdfExtension(selectedFile);
+            pdfCotejoService.exportar(selectedCotejo.getId(), destino.toPath());
+            statusLabel.setText("PDF exportado: " + destino.getAbsolutePath());
+        } catch (Exception exception) {
+            showError("Error al exportar PDF", exception);
+        }
+    }
+
     private void eliminarCotejoGuardado() {
         try {
             Evento selectedEvent = eventList.getSelectionModel().getSelectedItem();
@@ -874,6 +912,18 @@ public class MainController {
         cotejosGuardados.clear();
         peleasGuardadas.clear();
         gallosSinPeleaGuardados.clear();
+    }
+
+    private File ensurePdfExtension(File file) {
+        String name = file.getName().toLowerCase();
+        if (name.endsWith(".pdf")) {
+            return file;
+        }
+        Path parent = file.toPath().getParent();
+        if (parent == null) {
+            return new File(file.getAbsolutePath() + ".pdf");
+        }
+        return parent.resolve(file.getName() + ".pdf").toFile();
     }
 
     private void clearRestriccionFields() {
