@@ -1,6 +1,8 @@
 package com.cotejador.app.desktop;
 
 import com.cotejador.app.core.cotejo.MotorCotejo;
+import com.cotejador.app.core.cotejo.OrdenadorPeleas;
+import com.cotejador.app.core.cotejo.ParametrosOrdenamiento;
 import com.cotejador.app.core.cotejo.ParametrosCotejo;
 import com.cotejador.app.core.cotejo.Pelea;
 import com.cotejador.app.core.cotejo.ResultadoCotejo;
@@ -25,8 +27,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MainController {
     private final EventoRepository eventoRepository;
@@ -34,6 +38,7 @@ public class MainController {
     private final GalloRepository galloRepository;
     private final RestriccionPartidoRepository restriccionPartidoRepository;
     private final MotorCotejo motorCotejo = new MotorCotejo();
+    private final OrdenadorPeleas ordenadorPeleas = new OrdenadorPeleas();
 
     private final ObservableList<Evento> eventos = FXCollections.observableArrayList();
     private final ObservableList<Partido> partidos = FXCollections.observableArrayList();
@@ -60,6 +65,7 @@ public class MainController {
     private final TextField galloPesoField = new TextField();
     private final TextField galloAnilloField = new TextField();
     private final TextField toleranciaField = new TextField();
+    private final TextField partidosPrioritariosField = new TextField();
     private final Label statusLabel = new Label();
 
     public MainController(EventoRepository eventoRepository,
@@ -131,6 +137,7 @@ public class MainController {
         VBox cotejoBox = new VBox(6,
                 new Label("Cotejo del evento"),
                 toleranciaField,
+                partidosPrioritariosField,
                 cotejarButton,
                 new Label("Peleas generadas"),
                 peleasCotejoList,
@@ -171,6 +178,7 @@ public class MainController {
         galloPesoField.setPromptText("Peso en gramos");
         galloAnilloField.setPromptText("Anillo");
         toleranciaField.setPromptText("Tolerancia en gramos");
+        partidosPrioritariosField.setPromptText("Partidos prioritarios");
         restriccionPartidoOrigenCombo.setPromptText("Partido 1");
         restriccionPartidoDestinoCombo.setPromptText("Partido 2");
     }
@@ -514,13 +522,40 @@ public class MainController {
             }
 
             ResultadoCotejo resultado = motorCotejo.cotejar(loadGallosDelEvento(selectedEvent), parametros);
-            peleasCotejo.setAll(resultado.getPeleas());
+            List<Pelea> peleasOrdenadas = ordenadorPeleas.ordenar(
+                    resultado.getPeleas(),
+                    new ParametrosOrdenamiento(readPartidosPrioritarios(nombresPartidos))
+            );
+            peleasCotejo.setAll(peleasOrdenadas);
             gallosSinPelea.setAll(resultado.getGallosSinPelea());
-            statusLabel.setText("Cotejo generado: " + resultado.getPeleas().size() +
+            statusLabel.setText("Cotejo generado y ordenado: " + resultado.getPeleas().size() +
                     " peleas, " + resultado.getGallosSinPelea().size() + " gallos sin pelea.");
         } catch (Exception exception) {
             showError("Error al cotejar evento", exception);
         }
+    }
+
+    private Set<Long> readPartidosPrioritarios(Map<Long, String> nombresPartidos) {
+        Set<Long> partidosPrioritarios = new HashSet<Long>();
+        String text = partidosPrioritariosField.getText().trim();
+        if (text.isEmpty()) {
+            return partidosPrioritarios;
+        }
+
+        String[] partes = text.split(",");
+        for (String parte : partes) {
+            String nombrePrioritario = parte.trim();
+            if (nombrePrioritario.isEmpty()) {
+                continue;
+            }
+            for (Map.Entry<Long, String> entry : nombresPartidos.entrySet()) {
+                if (entry.getValue() != null && entry.getValue().equalsIgnoreCase(nombrePrioritario)) {
+                    partidosPrioritarios.add(entry.getKey());
+                }
+            }
+        }
+
+        return partidosPrioritarios;
     }
 
     private ParametrosCotejo readParametrosCotejo(Map<Long, String> nombresPartidos,
