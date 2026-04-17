@@ -49,6 +49,34 @@ public class DatabaseInitializer {
                     "CASE WHEN partido_origen_id < partido_destino_id THEN partido_origen_id ELSE partido_destino_id END, " +
                     "CASE WHEN partido_origen_id < partido_destino_id THEN partido_destino_id ELSE partido_origen_id END" +
                     ")";
+    private static final String CREATE_COTEJOS_TABLE =
+            "CREATE TABLE IF NOT EXISTS cotejos (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "evento_id INTEGER NOT NULL, " +
+                    "tolerancia_gramos REAL NOT NULL, " +
+                    "fecha_generacion TEXT NOT NULL, " +
+                    "FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE" +
+                    ")";
+    private static final String CREATE_PELEAS_GENERADAS_TABLE =
+            "CREATE TABLE IF NOT EXISTS peleas_generadas (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "cotejo_id INTEGER NOT NULL, " +
+                    "orden INTEGER NOT NULL, " +
+                    "gallo_1_id INTEGER NOT NULL, " +
+                    "gallo_2_id INTEGER NOT NULL, " +
+                    "diferencia_peso REAL NOT NULL, " +
+                    "FOREIGN KEY (cotejo_id) REFERENCES cotejos(id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (gallo_1_id) REFERENCES gallos(id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (gallo_2_id) REFERENCES gallos(id) ON DELETE CASCADE" +
+                    ")";
+    private static final String CREATE_GALLOS_SIN_PELEA_TABLE =
+            "CREATE TABLE IF NOT EXISTS gallos_sin_pelea (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "cotejo_id INTEGER NOT NULL, " +
+                    "gallo_id INTEGER NOT NULL, " +
+                    "FOREIGN KEY (cotejo_id) REFERENCES cotejos(id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (gallo_id) REFERENCES gallos(id) ON DELETE CASCADE" +
+                    ")";
 
     private final SQLiteConnectionFactory connectionFactory;
 
@@ -64,6 +92,7 @@ public class DatabaseInitializer {
             statement.execute(CREATE_GALLOS_TABLE);
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_TABLE);
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
+            createCotejoTables(statement);
             if (schemaNeedsMigration(connection)) {
                 migrateSchema(connection);
             }
@@ -97,6 +126,7 @@ public class DatabaseInitializer {
             statement.execute(CREATE_GALLOS_TABLE);
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_TABLE);
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
+            createCotejoTables(statement);
 
             statement.execute("INSERT INTO eventos (id, nombre, fecha, modalidad) " +
                     "SELECT id, nombre, COALESCE(fecha, ''), COALESCE(modalidad, '') FROM eventos_old");
@@ -123,5 +153,11 @@ public class DatabaseInitializer {
             }
             connection.setAutoCommit(previousAutoCommit);
         }
+    }
+
+    private void createCotejoTables(Statement statement) throws SQLException {
+        statement.execute(CREATE_COTEJOS_TABLE);
+        statement.execute(CREATE_PELEAS_GENERADAS_TABLE);
+        statement.execute(CREATE_GALLOS_SIN_PELEA_TABLE);
     }
 }

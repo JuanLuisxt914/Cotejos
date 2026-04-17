@@ -1,6 +1,7 @@
 package com.cotejador.app.desktop;
 
 import com.cotejador.app.data.sqlite.DatabaseInitializer;
+import com.cotejador.app.data.sqlite.CotejoRepository;
 import com.cotejador.app.data.sqlite.EventoRepository;
 import com.cotejador.app.data.sqlite.GalloRepository;
 import com.cotejador.app.data.sqlite.PartidoRepository;
@@ -18,12 +19,14 @@ public class MainApp extends Application {
         EventoRepository eventoRepository = new EventoRepository(connectionFactory);
         PartidoRepository partidoRepository = new PartidoRepository(connectionFactory);
         GalloRepository galloRepository = new GalloRepository(connectionFactory);
+        CotejoRepository cotejoRepository = new CotejoRepository(connectionFactory);
         RestriccionPartidoRepository restriccionPartidoRepository =
                 new RestriccionPartidoRepository(connectionFactory);
         MainController controller = new MainController(
                 eventoRepository,
                 partidoRepository,
                 galloRepository,
+                cotejoRepository,
                 restriccionPartidoRepository);
 
         Scene scene = new Scene(controller.createView(), 1380, 600);

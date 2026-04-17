@@ -8,8 +8,12 @@ import com.cotejador.app.core.cotejo.Pelea;
 import com.cotejador.app.core.cotejo.ResultadoCotejo;
 import com.cotejador.app.core.model.Evento;
 import com.cotejador.app.core.model.Gallo;
+import com.cotejador.app.core.model.CotejoGuardado;
+import com.cotejador.app.core.model.GalloSinPeleaGuardado;
 import com.cotejador.app.core.model.Partido;
+import com.cotejador.app.core.model.PeleaGuardada;
 import com.cotejador.app.core.model.RestriccionPartido;
+import com.cotejador.app.data.sqlite.CotejoRepository;
 import com.cotejador.app.data.sqlite.EventoRepository;
 import com.cotejador.app.data.sqlite.GalloRepository;
 import com.cotejador.app.data.sqlite.PartidoRepository;
@@ -31,11 +35,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 public class MainController {
     private final EventoRepository eventoRepository;
     private final PartidoRepository partidoRepository;
     private final GalloRepository galloRepository;
+    private final CotejoRepository cotejoRepository;
     private final RestriccionPartidoRepository restriccionPartidoRepository;
     private final MotorCotejo motorCotejo = new MotorCotejo();
     private final OrdenadorPeleas ordenadorPeleas = new OrdenadorPeleas();
@@ -46,6 +52,9 @@ public class MainController {
     private final ObservableList<Pelea> peleasCotejo = FXCollections.observableArrayList();
     private final ObservableList<Gallo> gallosSinPelea = FXCollections.observableArrayList();
     private final ObservableList<RestriccionPartido> restricciones = FXCollections.observableArrayList();
+    private final ObservableList<CotejoGuardado> cotejosGuardados = FXCollections.observableArrayList();
+    private final ObservableList<PeleaGuardada> peleasGuardadas = FXCollections.observableArrayList();
+    private final ObservableList<GalloSinPeleaGuardado> gallosSinPeleaGuardados = FXCollections.observableArrayList();
 
     private final ListView<Evento> eventList = new ListView<Evento>(eventos);
     private final ListView<Partido> partidoList = new ListView<Partido>(partidos);
@@ -54,6 +63,12 @@ public class MainController {
     private final ListView<Gallo> gallosSinPeleaList = new ListView<Gallo>(gallosSinPelea);
     private final ListView<RestriccionPartido> restriccionList =
             new ListView<RestriccionPartido>(restricciones);
+    private final ListView<CotejoGuardado> cotejoGuardadoList =
+            new ListView<CotejoGuardado>(cotejosGuardados);
+    private final ListView<PeleaGuardada> peleaGuardadaList =
+            new ListView<PeleaGuardada>(peleasGuardadas);
+    private final ListView<GalloSinPeleaGuardado> galloSinPeleaGuardadoList =
+            new ListView<GalloSinPeleaGuardado>(gallosSinPeleaGuardados);
     private final ComboBox<Partido> restriccionPartidoOrigenCombo = new ComboBox<Partido>(partidos);
     private final ComboBox<Partido> restriccionPartidoDestinoCombo = new ComboBox<Partido>(partidos);
 
@@ -71,10 +86,12 @@ public class MainController {
     public MainController(EventoRepository eventoRepository,
                           PartidoRepository partidoRepository,
                           GalloRepository galloRepository,
+                          CotejoRepository cotejoRepository,
                           RestriccionPartidoRepository restriccionPartidoRepository) {
         this.eventoRepository = eventoRepository;
         this.partidoRepository = partidoRepository;
         this.galloRepository = galloRepository;
+        this.cotejoRepository = cotejoRepository;
         this.restriccionPartidoRepository = restriccionPartidoRepository;
     }
 
@@ -95,6 +112,8 @@ public class MainController {
         Button cotejarButton = new Button("Cotejar");
         Button agregarRestriccionButton = new Button("Agregar restriccion");
         Button eliminarRestriccionButton = new Button("Eliminar restriccion");
+        Button verCotejoGuardadoButton = new Button("Ver cotejo");
+        Button eliminarCotejoGuardadoButton = new Button("Eliminar cotejo");
 
         crearEventoButton.setOnAction(event -> crearEvento());
         editarEventoButton.setOnAction(event -> editarEvento());
@@ -108,6 +127,8 @@ public class MainController {
         cotejarButton.setOnAction(event -> cotejarEventoSeleccionado());
         agregarRestriccionButton.setOnAction(event -> agregarRestriccion());
         eliminarRestriccionButton.setOnAction(event -> eliminarRestriccion());
+        verCotejoGuardadoButton.setOnAction(event -> verCotejoGuardado());
+        eliminarCotejoGuardadoButton.setOnAction(event -> eliminarCotejoGuardado());
 
         VBox eventBox = new VBox(6,
                 new Label("Eventos"),
@@ -152,19 +173,32 @@ public class MainController {
                 eliminarRestriccionButton,
                 restriccionList
         );
+        VBox cotejosGuardadosBox = new VBox(6,
+                new Label("Cotejos guardados"),
+                cotejoGuardadoList,
+                new HBox(6, verCotejoGuardadoButton, eliminarCotejoGuardadoButton),
+                new Label("Peleas guardadas"),
+                peleaGuardadaList,
+                new Label("Gallos sin pelea guardados"),
+                galloSinPeleaGuardadoList
+        );
 
-        HBox content = new HBox(10, eventBox, partidoBox, galloBox, cotejoBox, restriccionBox);
+        HBox content = new HBox(10, eventBox, partidoBox, galloBox, cotejoBox, restriccionBox, cotejosGuardadosBox);
         HBox.setHgrow(eventBox, Priority.ALWAYS);
         HBox.setHgrow(partidoBox, Priority.ALWAYS);
         HBox.setHgrow(galloBox, Priority.ALWAYS);
         HBox.setHgrow(cotejoBox, Priority.ALWAYS);
         HBox.setHgrow(restriccionBox, Priority.ALWAYS);
+        HBox.setHgrow(cotejosGuardadosBox, Priority.ALWAYS);
         VBox.setVgrow(eventList, Priority.ALWAYS);
         VBox.setVgrow(partidoList, Priority.ALWAYS);
         VBox.setVgrow(galloList, Priority.ALWAYS);
         VBox.setVgrow(peleasCotejoList, Priority.ALWAYS);
         VBox.setVgrow(gallosSinPeleaList, Priority.ALWAYS);
         VBox.setVgrow(restriccionList, Priority.ALWAYS);
+        VBox.setVgrow(cotejoGuardadoList, Priority.ALWAYS);
+        VBox.setVgrow(peleaGuardadaList, Priority.ALWAYS);
+        VBox.setVgrow(galloSinPeleaGuardadoList, Priority.ALWAYS);
 
         return new VBox(10, new Label("Cotejador"), content, statusLabel);
     }
@@ -189,6 +223,7 @@ public class MainController {
                 partidos.clear();
                 gallos.clear();
                 restricciones.clear();
+                clearCotejosGuardados();
                 clearCotejoResults();
                 clearPartidoFields();
                 clearGalloFields();
@@ -198,6 +233,7 @@ public class MainController {
                     fillEventoFields(selectedEvent);
                     partidos.setAll(partidoRepository.listarPorEvento(selectedEvent.getId()));
                     loadRestricciones(selectedEvent.getId());
+                    loadCotejosGuardados(selectedEvent.getId());
                 } else {
                     clearEventoFields();
                 }
@@ -285,6 +321,7 @@ public class MainController {
             partidos.clear();
             gallos.clear();
             restricciones.clear();
+            clearCotejosGuardados();
             clearCotejoResults();
             clearEventoFields();
             clearPartidoFields();
@@ -528,10 +565,108 @@ public class MainController {
             );
             peleasCotejo.setAll(peleasOrdenadas);
             gallosSinPelea.setAll(resultado.getGallosSinPelea());
-            statusLabel.setText("Cotejo generado y ordenado: " + resultado.getPeleas().size() +
+            CotejoGuardado cotejoGuardado = guardarCotejo(
+                    selectedEvent,
+                    toleranciaFromParametros(parametros),
+                    peleasOrdenadas,
+                    resultado.getGallosSinPelea());
+            loadCotejosGuardados(selectedEvent.getId());
+            selectCotejoById(cotejoGuardado.getId());
+            statusLabel.setText("Cotejo generado, ordenado y guardado: " + resultado.getPeleas().size() +
                     " peleas, " + resultado.getGallosSinPelea().size() + " gallos sin pelea.");
         } catch (Exception exception) {
             showError("Error al cotejar evento", exception);
+        }
+    }
+
+    private CotejoGuardado guardarCotejo(Evento evento,
+                                         double tolerancia,
+                                         List<Pelea> peleas,
+                                         List<Gallo> gallosSinPeleaResultado) throws Exception {
+        CotejoGuardado cotejo = new CotejoGuardado(
+                null,
+                evento.getId(),
+                tolerancia,
+                LocalDateTime.now().toString()
+        );
+        cotejo.setPeleas(toPeleasGuardadas(peleas));
+        cotejo.setGallosSinPelea(toGallosSinPeleaGuardados(gallosSinPeleaResultado));
+        cotejoRepository.guardar(cotejo);
+        return cotejo;
+    }
+
+    private double toleranciaFromParametros(ParametrosCotejo parametros) {
+        return parametros.getToleranciaGramos();
+    }
+
+    private List<PeleaGuardada> toPeleasGuardadas(List<Pelea> peleas) {
+        java.util.List<PeleaGuardada> peleasGuardadas = new java.util.ArrayList<PeleaGuardada>();
+        int orden = 1;
+        for (Pelea pelea : peleas) {
+            peleasGuardadas.add(new PeleaGuardada(
+                    null,
+                    null,
+                    orden,
+                    pelea.getGallo1().getId(),
+                    pelea.getGallo2().getId(),
+                    pelea.getDiferenciaPeso()
+            ));
+            orden++;
+        }
+        return peleasGuardadas;
+    }
+
+    private List<GalloSinPeleaGuardado> toGallosSinPeleaGuardados(List<Gallo> gallos) {
+        java.util.List<GalloSinPeleaGuardado> guardados =
+                new java.util.ArrayList<GalloSinPeleaGuardado>();
+        for (Gallo gallo : gallos) {
+            guardados.add(new GalloSinPeleaGuardado(null, null, gallo.getId()));
+        }
+        return guardados;
+    }
+
+    private void verCotejoGuardado() {
+        try {
+            CotejoGuardado selectedCotejo = cotejoGuardadoList.getSelectionModel().getSelectedItem();
+            if (selectedCotejo == null) {
+                statusLabel.setText("Selecciona un cotejo guardado.");
+                return;
+            }
+
+            CotejoGuardado detalle = cotejoRepository.cargarDetalle(selectedCotejo.getId());
+            if (detalle == null) {
+                statusLabel.setText("No se encontro el cotejo guardado.");
+                return;
+            }
+
+            peleasGuardadas.setAll(detalle.getPeleas());
+            gallosSinPeleaGuardados.setAll(detalle.getGallosSinPelea());
+            statusLabel.setText("Cotejo guardado cargado.");
+        } catch (Exception exception) {
+            showError("Error al cargar cotejo guardado", exception);
+        }
+    }
+
+    private void eliminarCotejoGuardado() {
+        try {
+            Evento selectedEvent = eventList.getSelectionModel().getSelectedItem();
+            CotejoGuardado selectedCotejo = cotejoGuardadoList.getSelectionModel().getSelectedItem();
+            if (selectedEvent == null) {
+                statusLabel.setText("Selecciona un evento.");
+                return;
+            }
+            if (selectedCotejo == null) {
+                statusLabel.setText("Selecciona un cotejo guardado para eliminar.");
+                return;
+            }
+
+            cotejoRepository.eliminar(selectedCotejo.getId());
+            loadCotejosGuardados(selectedEvent.getId());
+            peleasGuardadas.clear();
+            gallosSinPeleaGuardados.clear();
+            statusLabel.setText("Cotejo guardado eliminado.");
+        } catch (Exception exception) {
+            showError("Error al eliminar cotejo guardado", exception);
         }
     }
 
@@ -692,6 +827,12 @@ public class MainController {
         restricciones.setAll(restriccionPartidoRepository.listarPorEvento(eventoId));
     }
 
+    private void loadCotejosGuardados(Long eventoId) throws Exception {
+        cotejosGuardados.setAll(cotejoRepository.listarPorEvento(eventoId));
+        peleasGuardadas.clear();
+        gallosSinPeleaGuardados.clear();
+    }
+
     private void fillEventoFields(Evento evento) {
         eventoNombreField.setText(evento.getNombre());
         eventoFechaField.setText(evento.getFecha());
@@ -727,6 +868,12 @@ public class MainController {
     private void clearCotejoResults() {
         peleasCotejo.clear();
         gallosSinPelea.clear();
+    }
+
+    private void clearCotejosGuardados() {
+        cotejosGuardados.clear();
+        peleasGuardadas.clear();
+        gallosSinPeleaGuardados.clear();
     }
 
     private void clearRestriccionFields() {
@@ -769,6 +916,19 @@ public class MainController {
         for (Gallo gallo : galloList.getItems()) {
             if (id.equals(gallo.getId())) {
                 galloList.getSelectionModel().select(gallo);
+                return;
+            }
+        }
+    }
+
+    private void selectCotejoById(Long id) {
+        if (id == null) {
+            cotejoGuardadoList.getSelectionModel().clearSelection();
+            return;
+        }
+        for (CotejoGuardado cotejo : cotejoGuardadoList.getItems()) {
+            if (id.equals(cotejo.getId())) {
+                cotejoGuardadoList.getSelectionModel().select(cotejo);
                 return;
             }
         }
