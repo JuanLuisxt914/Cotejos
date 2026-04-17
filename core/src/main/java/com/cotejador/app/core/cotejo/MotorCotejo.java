@@ -43,23 +43,26 @@ public class MotorCotejo {
 
         List<Pelea> peleas = new ArrayList<Pelea>();
         Set<Gallo> gallosUsados = new HashSet<Gallo>();
+        Set<Long> galloIdsUsados = new HashSet<Long>();
 
         for (Gallo gallo : candidatos) {
-            if (gallosUsados.contains(gallo)) {
+            if (estaUsado(gallo, gallosUsados, galloIdsUsados)) {
                 continue;
             }
 
-            Gallo mejorRival = buscarMejorRival(gallo, candidatos, gallosUsados, parametros);
+            Gallo mejorRival = buscarMejorRival(gallo, candidatos, gallosUsados, galloIdsUsados, parametros);
             if (mejorRival != null) {
                 gallosUsados.add(gallo);
                 gallosUsados.add(mejorRival);
+                registrarIdUsado(gallo, galloIdsUsados);
+                registrarIdUsado(mejorRival, galloIdsUsados);
                 peleas.add(new Pelea(gallo, mejorRival, diferenciaPeso(gallo, mejorRival)));
             }
         }
 
         List<Gallo> gallosSinPelea = new ArrayList<Gallo>();
         for (Gallo gallo : candidatos) {
-            if (!gallosUsados.contains(gallo)) {
+            if (!estaUsado(gallo, gallosUsados, galloIdsUsados)) {
                 gallosSinPelea.add(gallo);
             }
         }
@@ -70,12 +73,13 @@ public class MotorCotejo {
     private Gallo buscarMejorRival(Gallo gallo,
                                    List<Gallo> candidatos,
                                    Set<Gallo> gallosUsados,
+                                   Set<Long> galloIdsUsados,
                                    ParametrosCotejo parametros) {
         Gallo mejorRival = null;
         double mejorDiferencia = Double.MAX_VALUE;
 
         for (Gallo rival : candidatos) {
-            if (!esRivalValido(gallo, rival, gallosUsados, parametros)) {
+            if (!esRivalValido(gallo, rival, gallosUsados, galloIdsUsados, parametros)) {
                 continue;
             }
 
@@ -92,6 +96,7 @@ public class MotorCotejo {
     private boolean esRivalValido(Gallo gallo,
                                   Gallo rival,
                                   Set<Gallo> gallosUsados,
+                                  Set<Long> galloIdsUsados,
                                   ParametrosCotejo parametros) {
         if (gallo == rival) {
             return false;
@@ -99,13 +104,24 @@ public class MotorCotejo {
         if (gallo.getId() != null && gallo.getId().equals(rival.getId())) {
             return false;
         }
-        if (gallosUsados.contains(rival)) {
+        if (estaUsado(rival, gallosUsados, galloIdsUsados)) {
             return false;
         }
         if (gallo.getPartidoId() != null && gallo.getPartidoId().equals(rival.getPartidoId())) {
             return false;
         }
         return diferenciaPeso(gallo, rival) <= parametros.getToleranciaGramos();
+    }
+
+    private boolean estaUsado(Gallo gallo, Set<Gallo> gallosUsados, Set<Long> galloIdsUsados) {
+        return gallosUsados.contains(gallo) ||
+                (gallo.getId() != null && galloIdsUsados.contains(gallo.getId()));
+    }
+
+    private void registrarIdUsado(Gallo gallo, Set<Long> galloIdsUsados) {
+        if (gallo.getId() != null) {
+            galloIdsUsados.add(gallo.getId());
+        }
     }
 
     private double diferenciaPeso(Gallo gallo1, Gallo gallo2) {

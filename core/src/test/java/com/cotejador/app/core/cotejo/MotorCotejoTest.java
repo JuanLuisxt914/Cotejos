@@ -1,0 +1,184 @@
+package com.cotejador.app.core.cotejo;
+
+import com.cotejador.app.core.model.Gallo;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class MotorCotejoTest {
+    private final MotorCotejo motorCotejo = new MotorCotejo();
+
+    @Test
+    public void emparejaDosGallosDePartidosDistintosDentroDeLaTolerancia() {
+        Gallo gallo1 = gallo(1L, "Gallo 1", 1000, 10L);
+        Gallo gallo2 = gallo(2L, "Gallo 2", 1005, 20L);
+
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(gallo1, gallo2),
+                new ParametrosCotejo(5)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertEquals(0, resultado.getGallosSinPelea().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 2L, 5);
+    }
+
+    @Test
+    public void noEmparejaGallosDelMismoPartido() {
+        Gallo gallo1 = gallo(1L, "Gallo 1", 1000, 10L);
+        Gallo gallo2 = gallo(2L, "Gallo 2", 1001, 10L);
+
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(gallo1, gallo2),
+                new ParametrosCotejo(10)
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L, 2L);
+    }
+
+    @Test
+    public void noReutilizaUnGalloEnMasDeUnaPelea() {
+        Gallo gallo1 = gallo(1L, "Gallo 1", 1000, 10L);
+        Gallo gallo2 = gallo(2L, "Gallo 2", 1001, 20L);
+        Gallo gallo3 = gallo(3L, "Gallo 3", 1002, 30L);
+
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(gallo1, gallo2, gallo3),
+                new ParametrosCotejo(5)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertEquals(1, resultado.getGallosSinPelea().size());
+        assertNoRepeatedIds(resultado.getPeleas());
+    }
+
+    @Test
+    public void dejaSinPeleaLosGallosFueraDeTolerancia() {
+        Gallo gallo1 = gallo(1L, "Gallo 1", 1000, 10L);
+        Gallo gallo2 = gallo(2L, "Gallo 2", 1020, 20L);
+
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(gallo1, gallo2),
+                new ParametrosCotejo(10)
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L, 2L);
+    }
+
+    @Test
+    public void conVariosRivalesValidosEligeElDeMenorDiferenciaDePeso() {
+        Gallo gallo1 = gallo(1L, "Gallo 1", 1000, 10L);
+        Gallo gallo2 = gallo(2L, "Gallo 2", 1008, 20L);
+        Gallo gallo3 = gallo(3L, "Gallo 3", 1002, 30L);
+
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(gallo1, gallo2, gallo3),
+                new ParametrosCotejo(10)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 3L, 2);
+        assertIds(resultado.getGallosSinPelea(), 2L);
+    }
+
+    @Test
+    public void conListaVaciaRegresaCeroPeleasYCeroGallosSinPelea() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Collections.<Gallo>emptyList(),
+                new ParametrosCotejo(10)
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertEquals(0, resultado.getGallosSinPelea().size());
+    }
+
+    @Test
+    public void conUnSoloGalloRegresaCeroPeleasYUnGalloSinPelea() {
+        Gallo gallo = gallo(1L, "Gallo 1", 1000, 10L);
+
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Collections.singletonList(gallo),
+                new ParametrosCotejo(10)
+        );
+
+        assertEquals(0, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L);
+    }
+
+    @Test
+    public void conVariosGallosPosiblesElResultadoEsConsistenteYNingunIdSeRepite() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L),
+                        gallo(3L, "C", 1004, 30L),
+                        gallo(4L, "D", 1005, 40L),
+                        gallo(5L, "E", 1040, 50L)
+                ),
+                new ParametrosCotejo(5)
+        );
+
+        assertEquals(2, resultado.getPeleas().size());
+        assertEquals(1, resultado.getGallosSinPelea().size());
+        assertNoRepeatedIds(resultado.getPeleas());
+        assertIds(resultado.getGallosSinPelea(), 5L);
+    }
+
+    @Test
+    public void noReutilizaElMismoIdAunqueVengaEnObjetosDistintos() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L),
+                        gallo(1L, "A duplicado", 1002, 30L),
+                        gallo(3L, "C", 1003, 40L)
+                ),
+                new ParametrosCotejo(5)
+        );
+
+        assertNoRepeatedIds(resultado.getPeleas());
+        assertEquals(1, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 3L);
+    }
+
+    private Gallo gallo(Long id, String nombre, double peso, Long partidoId) {
+        return new Gallo(id, nombre, peso, "", partidoId);
+    }
+
+    private void assertPelea(Pelea pelea, Long gallo1Id, Long gallo2Id, double diferencia) {
+        assertEquals(gallo1Id, pelea.getGallo1().getId());
+        assertEquals(gallo2Id, pelea.getGallo2().getId());
+        assertEquals(diferencia, pelea.getDiferenciaPeso(), 0.0001);
+        assertFalse(pelea.getGallo1().getPartidoId().equals(pelea.getGallo2().getPartidoId()));
+    }
+
+    private void assertIds(List<Gallo> gallos, Long... ids) {
+        assertEquals(ids.length, gallos.size());
+        Set<Long> actualIds = new HashSet<Long>();
+        for (Gallo gallo : gallos) {
+            actualIds.add(gallo.getId());
+        }
+        for (Long id : ids) {
+            assertTrue("No se encontro el gallo con id " + id, actualIds.contains(id));
+        }
+    }
+
+    private void assertNoRepeatedIds(List<Pelea> peleas) {
+        Set<Long> ids = new HashSet<Long>();
+        for (Pelea pelea : peleas) {
+            assertTrue("Id repetido en peleas: " + pelea.getGallo1().getId(), ids.add(pelea.getGallo1().getId()));
+            assertTrue("Id repetido en peleas: " + pelea.getGallo2().getId(), ids.add(pelea.getGallo2().getId()));
+            assertFalse(pelea.getGallo1().getId().equals(pelea.getGallo2().getId()));
+        }
+    }
+}
