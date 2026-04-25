@@ -68,19 +68,25 @@
 
 .events-view .view-title {
     -fx-text-fill: #f3f7fb;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
 }
 
 .events-view .section-title {
-    -fx-text-fill: #8ea1b8;
+    -fx-text-fill: #b6c6d8;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-padding: 0 0 2 0;
 }
 
 .events-form-panel,
 .events-list-panel {
     -fx-background-color: rgba(12, 18, 26, 0.94);
-    -fx-background-radius: 16;
+    -fx-background-radius: 18;
     -fx-border-color: rgba(106, 131, 164, 0.18);
-    -fx-border-radius: 16;
-    -fx-padding: 16;
+    -fx-border-radius: 18;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(35, 48, 64, 0.08), 14, 0.18, 0, 3);
 }
 
 .events-view .text-field,
@@ -127,12 +133,15 @@
     -fx-background-color: rgba(11, 16, 23, 0.92);
     -fx-control-inner-background: rgba(11, 16, 23, 0.92);
     -fx-border-color: rgba(106, 131, 164, 0.16);
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
 }
 
 .events-view .list-view .list-cell {
     -fx-text-fill: #dbe5f1;
     -fx-font-size: 16px;
-    -fx-padding: 10 12 10 12;
+    -fx-padding: 8 10 8 10;
+    -fx-background-insets: 0;
 }
 
 .events-view .list-view .list-cell:filled:selected {
@@ -229,15 +238,20 @@
 .event-card {
     -fx-background-color: rgba(13, 18, 26, 0.96);
     -fx-border-color: rgba(106, 131, 164, 0.18);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 12 12 12 12;
 }
 
 .event-card-title {
     -fx-text-fill: #f3f7fb;
-    -fx-font-size: 18px;
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
 }
 
 .event-card-meta {
     -fx-text-fill: #8ea1b8;
+    -fx-font-size: 12px;
 }
 
 .titled-pane > .title {
