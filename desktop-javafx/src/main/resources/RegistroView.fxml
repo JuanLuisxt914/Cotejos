@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.cotejador.app.desktop.RegistroController"
+      spacing="8"
+      styleClass="view-container">
+
+    <padding>
+        <Insets top="12" right="12" bottom="12" left="12"/>
+    </padding>
+
+    <Label text="Partidos" styleClass="view-title"/>
+
+    <Label text="Nombre del partido" labelFor="$partidoNombreField"/>
+    <TextField fx:id="partidoNombreField"
+               promptText="Nombre del partido"
+               accessibleText="Nombre del partido"/>
+
+    <HBox spacing="6">
+        <Button text="Agregar partido" onAction="#agregarPartido" fx:id="agregarPartidoButton" styleClass="primary-action"
+                accessibleText="Agregar partido"/>
+        <Button text="Editar partido" onAction="#editarPartido" fx:id="editarPartidoButton"
+                accessibleText="Editar partido seleccionado"/>
+    </HBox>
+    <Button text="Eliminar partido" onAction="#eliminarPartido" fx:id="eliminarPartidoButton" styleClass="danger-action"
+            accessibleText="Eliminar partido seleccionado"/>
+
+    <Label text="Partidos del evento" styleClass="section-title"/>
+    <ListView fx:id="partidoList"
+              prefHeight="170.0"
+              accessibleText="Lista de partidos"/>
+
+    <Label text="Gallos" styleClass="view-title"/>
+
+    <Label text="Nombre del gallo" labelFor="$galloNombreField"/>
+    <TextField fx:id="galloNombreField"
+               promptText="Nombre del gallo"
+               accessibleText="Nombre del gallo"/>
+
+    <Label text="Peso en gramos" labelFor="$galloPesoField"/>
+    <TextField fx:id="galloPesoField"
+               promptText="Peso en gramos"
+               accessibleText="Peso del gallo en gramos"/>
+
+    <Label text="Anillo" labelFor="$galloAnilloField"/>
+    <TextField fx:id="galloAnilloField"
+               promptText="Anillo"
+               accessibleText="Anillo del gallo"/>
+
+    <CheckBox fx:id="galloObligatorioCheckBox"
+              text="Gallo obligatorio"
+              accessibleText="Marca el gallo como obligatorio"/>
+
+    <HBox spacing="6">
+        <Button text="Agregar gallo" onAction="#agregarGallo" fx:id="agregarGalloButton" styleClass="primary-action"
+                accessibleText="Agregar gallo"/>
+        <Button text="Editar gallo" onAction="#editarGallo" fx:id="editarGalloButton"
+                accessibleText="Editar gallo seleccionado"/>
+    </HBox>
+    <Button text="Eliminar gallo" onAction="#eliminarGallo" fx:id="eliminarGalloButton" styleClass="danger-action"
+            accessibleText="Eliminar gallo seleccionado"/>
+
+    <Label text="Gallos del partido" styleClass="section-title"/>
+    <ListView fx:id="galloList"
+              VBox.vgrow="ALWAYS"
+              accessibleText="Lista de gallos"/>
+
+</VBox>

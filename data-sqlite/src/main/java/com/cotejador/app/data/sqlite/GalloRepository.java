@@ -12,13 +12,13 @@ import java.util.List;
 
 public class GalloRepository {
     private static final String INSERT_GALLO =
-            "INSERT INTO gallos (nombre, peso, anillo, partido_id) VALUES (?, ?, ?, ?)";
+            "INSERT INTO gallos (nombre, peso, anillo, partido_id, obligatorio) VALUES (?, ?, ?, ?, ?)";
     private static final String SELECT_GALLOS_BY_PARTIDO =
-            "SELECT id, nombre, peso, anillo, partido_id FROM gallos WHERE partido_id = ? ORDER BY id";
+            "SELECT id, nombre, peso, anillo, partido_id, obligatorio FROM gallos WHERE partido_id = ? ORDER BY id";
     private static final String SELECT_GALLO_BY_ID =
-            "SELECT id, nombre, peso, anillo, partido_id FROM gallos WHERE id = ?";
+            "SELECT id, nombre, peso, anillo, partido_id, obligatorio FROM gallos WHERE id = ?";
     private static final String UPDATE_GALLO =
-            "UPDATE gallos SET nombre = ?, peso = ?, anillo = ? WHERE id = ?";
+            "UPDATE gallos SET nombre = ?, peso = ?, anillo = ?, obligatorio = ? WHERE id = ?";
     private static final String DELETE_GALLO =
             "DELETE FROM gallos WHERE id = ?";
 
@@ -35,6 +35,7 @@ public class GalloRepository {
             statement.setDouble(2, gallo.getPeso());
             statement.setString(3, gallo.getAnillo());
             statement.setLong(4, gallo.getPartidoId());
+            statement.setInt(5, gallo.isObligatorio() ? 1 : 0);
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -59,7 +60,8 @@ public class GalloRepository {
                             resultSet.getString("nombre"),
                             resultSet.getDouble("peso"),
                             resultSet.getString("anillo"),
-                            resultSet.getLong("partido_id")
+                            resultSet.getLong("partido_id"),
+                            resultSet.getInt("obligatorio") != 0
                     ));
                 }
             }
@@ -80,7 +82,8 @@ public class GalloRepository {
                             resultSet.getString("nombre"),
                             resultSet.getDouble("peso"),
                             resultSet.getString("anillo"),
-                            resultSet.getLong("partido_id")
+                            resultSet.getLong("partido_id"),
+                            resultSet.getInt("obligatorio") != 0
                     );
                 }
             }
@@ -95,7 +98,8 @@ public class GalloRepository {
             statement.setString(1, gallo.getNombre());
             statement.setDouble(2, gallo.getPeso());
             statement.setString(3, gallo.getAnillo());
-            statement.setLong(4, gallo.getId());
+            statement.setInt(4, gallo.isObligatorio() ? 1 : 0);
+            statement.setLong(5, gallo.getId());
             statement.executeUpdate();
         }
     }

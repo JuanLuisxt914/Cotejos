@@ -11,7 +11,12 @@ public class DatabaseInitializer {
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "nombre TEXT NOT NULL, " +
                     "fecha TEXT NOT NULL, " +
-                    "modalidad TEXT NOT NULL" +
+                    "modalidad TEXT NOT NULL, " +
+                    "gallos_por_partido INTEGER NOT NULL DEFAULT 0, " +
+                    "gallos_obligatorios INTEGER NOT NULL DEFAULT 0, " +
+                    "ultima_ronda_solo_obligatorios INTEGER NOT NULL DEFAULT 0, " +
+                    "modo_cotejo TEXT NOT NULL DEFAULT 'ALEATORIO', " +
+                    "excluir_obligatorios_del_cotejo INTEGER NOT NULL DEFAULT 0" +
                     ")";
     private static final String CREATE_PARTIDOS_TABLE =
             "CREATE TABLE IF NOT EXISTS partidos (" +
@@ -26,6 +31,7 @@ public class DatabaseInitializer {
                     "nombre TEXT NOT NULL, " +
                     "peso REAL NOT NULL CHECK (peso > 0), " +
                     "anillo TEXT, " +
+                    "obligatorio INTEGER NOT NULL DEFAULT 0, " +
                     "partido_id INTEGER NOT NULL, " +
                     "FOREIGN KEY (partido_id) REFERENCES partidos(id) ON DELETE CASCADE" +
                     ")";
@@ -93,6 +99,7 @@ public class DatabaseInitializer {
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_TABLE);
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
             createCotejoTables(statement);
+            ensureEventoColumns(connection);
             if (schemaNeedsMigration(connection)) {
                 migrateSchema(connection);
             }
@@ -103,11 +110,56 @@ public class DatabaseInitializer {
         return !hasForeignKeys(connection, "partidos") || !hasForeignKeys(connection, "gallos");
     }
 
+    private void ensureEventoColumns(Connection connection) throws SQLException {
+        if (!hasColumn(connection, "eventos", "gallos_por_partido")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE eventos ADD COLUMN gallos_por_partido INTEGER NOT NULL DEFAULT 0");
+            }
+        }
+        if (!hasColumn(connection, "eventos", "gallos_obligatorios")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE eventos ADD COLUMN gallos_obligatorios INTEGER NOT NULL DEFAULT 0");
+            }
+        }
+        if (!hasColumn(connection, "eventos", "ultima_ronda_solo_obligatorios")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE eventos ADD COLUMN ultima_ronda_solo_obligatorios INTEGER NOT NULL DEFAULT 0");
+            }
+        }
+        if (!hasColumn(connection, "eventos", "modo_cotejo")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE eventos ADD COLUMN modo_cotejo TEXT NOT NULL DEFAULT 'ALEATORIO'");
+            }
+        }
+        if (!hasColumn(connection, "eventos", "excluir_obligatorios_del_cotejo")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE eventos ADD COLUMN excluir_obligatorios_del_cotejo INTEGER NOT NULL DEFAULT 0");
+            }
+        }
+        if (!hasColumn(connection, "gallos", "obligatorio")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE gallos ADD COLUMN obligatorio INTEGER NOT NULL DEFAULT 0");
+            }
+        }
+    }
+
     private boolean hasForeignKeys(Connection connection, String tableName) throws SQLException {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery("PRAGMA foreign_key_list(" + tableName + ")")) {
             return resultSet.next();
         }
+    }
+
+    private boolean hasColumn(Connection connection, String tableName, String columnName) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("PRAGMA table_info(" + tableName + ")")) {
+            while (resultSet.next()) {
+                if (columnName.equalsIgnoreCase(resultSet.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void migrateSchema(Connection connection) throws SQLException {
@@ -128,13 +180,13 @@ public class DatabaseInitializer {
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
             createCotejoTables(statement);
 
-            statement.execute("INSERT INTO eventos (id, nombre, fecha, modalidad) " +
-                    "SELECT id, nombre, COALESCE(fecha, ''), COALESCE(modalidad, '') FROM eventos_old");
+            statement.execute("INSERT INTO eventos (id, nombre, fecha, modalidad, gallos_por_partido, gallos_obligatorios, ultima_ronda_solo_obligatorios, modo_cotejo, excluir_obligatorios_del_cotejo) " +
+                    "SELECT id, nombre, COALESCE(fecha, ''), COALESCE(modalidad, ''), 0, 0, 0, 'ALEATORIO', 0 FROM eventos_old");
             statement.execute("INSERT INTO partidos (id, nombre, evento_id) " +
                     "SELECT p.id, p.nombre, p.evento_id FROM partidos_old p " +
                     "INNER JOIN eventos e ON e.id = p.evento_id");
-            statement.execute("INSERT INTO gallos (id, nombre, peso, anillo, partido_id) " +
-                    "SELECT g.id, g.nombre, g.peso, g.anillo, g.partido_id FROM gallos_old g " +
+            statement.execute("INSERT INTO gallos (id, nombre, peso, anillo, obligatorio, partido_id) " +
+                    "SELECT g.id, g.nombre, g.peso, g.anillo, 0, g.partido_id FROM gallos_old g " +
                     "INNER JOIN partidos p ON p.id = g.partido_id " +
                     "WHERE g.peso > 0");
 

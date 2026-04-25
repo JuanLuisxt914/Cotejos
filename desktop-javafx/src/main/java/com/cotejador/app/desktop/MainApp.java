@@ -1,42 +1,29 @@
 package com.cotejador.app.desktop;
 
 import com.cotejador.app.data.sqlite.DatabaseInitializer;
-import com.cotejador.app.data.sqlite.CotejoRepository;
-import com.cotejador.app.data.sqlite.EventoRepository;
-import com.cotejador.app.data.sqlite.GalloRepository;
-import com.cotejador.app.data.sqlite.PartidoRepository;
-import com.cotejador.app.data.sqlite.PdfCotejoService;
-import com.cotejador.app.data.sqlite.RestriccionPartidoRepository;
+import com.cotejador.app.data.sqlite.PdfBoxRuntimeConfig;
 import com.cotejador.app.data.sqlite.SQLiteConnectionFactory;
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
+        PdfBoxRuntimeConfig.configure();
         SQLiteConnectionFactory connectionFactory = new SQLiteConnectionFactory();
         new DatabaseInitializer(connectionFactory).initialize();
-        EventoRepository eventoRepository = new EventoRepository(connectionFactory);
-        PartidoRepository partidoRepository = new PartidoRepository(connectionFactory);
-        GalloRepository galloRepository = new GalloRepository(connectionFactory);
-        CotejoRepository cotejoRepository = new CotejoRepository(connectionFactory);
-        PdfCotejoService pdfCotejoService = new PdfCotejoService(
-                cotejoRepository,
-                eventoRepository,
-                partidoRepository,
-                galloRepository);
-        RestriccionPartidoRepository restriccionPartidoRepository =
-                new RestriccionPartidoRepository(connectionFactory);
-        MainController controller = new MainController(
-                eventoRepository,
-                partidoRepository,
-                galloRepository,
-                cotejoRepository,
-                pdfCotejoService,
-                restriccionPartidoRepository);
 
-        Scene scene = new Scene(controller.createView(), 1380, 600);
+        FXMLLoader shellLoader = new FXMLLoader(getClass().getResource("/ShellView.fxml"));
+        Parent root = shellLoader.load();
+        ShellController shellController = shellLoader.getController();
+        shellController.initialize();
+
+        Scene scene = new Scene(root, 800, 670);
+        scene.getStylesheets().add(getClass().getResource("/app.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/theme-dark.css").toExternalForm());
 
         primaryStage.setTitle("Cotejador");
         primaryStage.setScene(scene);

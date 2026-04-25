@@ -1,0 +1,251 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom right, #070b11, #0d141d 55%, #05070a);
+    -fx-text-fill: #e6edf5;
+}
+
+.app-shell {
+    -fx-background-color: linear-gradient(to bottom right, #070b11, #0d141d 55%, #05070a);
+}
+
+.header {
+    -fx-background-color: linear-gradient(to right, #0f1620, #172331);
+    -fx-border-color: rgba(106, 131, 164, 0.24);
+    -fx-border-width: 0 0 1 0;
+}
+
+.drawer-panel {
+    -fx-background-color: linear-gradient(to bottom, rgba(8, 12, 17, 0.99), rgba(14, 20, 28, 0.99));
+    -fx-border-color: rgba(106, 131, 164, 0.22);
+}
+
+.drawer-panel .button.active-view {
+    -fx-background-color: linear-gradient(to right, rgba(55, 84, 118, 0.56), rgba(55, 84, 118, 0.22));
+    -fx-text-fill: #f3f7fb;
+}
+
+.drawer-panel .button {
+    -fx-font-size: 13px;
+    -fx-padding: 12 14 12 14;
+}
+
+.drawer-backdrop {
+    -fx-background-color: rgba(0, 0, 0, 0.38);
+}
+
+.event-info-label {
+    -fx-text-fill: #8ea1b8;
+}
+
+.event-info-value {
+    -fx-text-fill: #f2f6fb;
+}
+
+.app-title {
+    -fx-text-fill: #f3f7fb;
+}
+
+.status-label {
+    -fx-background-color: rgba(9, 13, 18, 0.95);
+    -fx-text-fill: #dbe5f1;
+    -fx-border-color: rgba(190, 171, 130, 0.18);
+}
+
+.view-title {
+    -fx-text-fill: #f3f7fb;
+}
+
+.section-title {
+    -fx-text-fill: #8ea1b8;
+}
+
+.events-view {
+    -fx-background-color: linear-gradient(to bottom right, #0a1018, #111a25 56%, #070b11);
+}
+
+.events-view .label {
+    -fx-text-fill: #dbe5f1;
+}
+
+.events-view .view-title {
+    -fx-text-fill: #f3f7fb;
+}
+
+.events-view .section-title {
+    -fx-text-fill: #8ea1b8;
+}
+
+.events-form-panel,
+.events-list-panel {
+    -fx-background-color: rgba(12, 18, 26, 0.94);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(106, 131, 164, 0.18);
+    -fx-border-radius: 16;
+    -fx-padding: 16;
+}
+
+.events-view .text-field,
+.events-view .date-picker,
+.events-view .spinner,
+.events-view .combo-box-base {
+    -fx-background-color: rgba(15, 22, 31, 0.98);
+    -fx-text-fill: #e6edf5;
+    -fx-prompt-text-fill: #7f93aa;
+    -fx-border-color: rgba(106, 131, 164, 0.24);
+}
+
+.events-view .text-field:focused,
+.events-view .date-picker:focused,
+.events-view .spinner:focused,
+.events-view .combo-box-base:focused {
+    -fx-border-color: #5f85b4;
+    -fx-effect: dropshadow(gaussian, rgba(95, 133, 180, 0.18), 10, 0.2, 0, 0);
+}
+
+.events-view .button {
+    -fx-background-color: linear-gradient(to bottom, #18222f, #101722);
+    -fx-text-fill: #e6edf5;
+    -fx-border-color: rgba(106, 131, 164, 0.16);
+}
+
+.events-view .button:hover {
+    -fx-background-color: linear-gradient(to bottom, #203042, #14202d);
+}
+
+.events-view .button.primary-action {
+    -fx-background-color: linear-gradient(to bottom, #4c78a8, #315174);
+    -fx-text-fill: #f7fbff;
+    -fx-border-color: rgba(103, 143, 191, 0.28);
+}
+
+.events-view .button.danger-action {
+    -fx-background-color: linear-gradient(to bottom, #253244, #182230);
+    -fx-text-fill: #eef4fa;
+    -fx-border-color: rgba(106, 131, 164, 0.18);
+}
+
+.events-view .list-view {
+    -fx-background-color: rgba(11, 16, 23, 0.92);
+    -fx-control-inner-background: rgba(11, 16, 23, 0.92);
+    -fx-border-color: rgba(106, 131, 164, 0.16);
+}
+
+.events-view .list-view .list-cell {
+    -fx-text-fill: #dbe5f1;
+    -fx-font-size: 16px;
+    -fx-padding: 10 12 10 12;
+}
+
+.events-view .list-view .list-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(76, 120, 168, 0.26), rgba(76, 120, 168, 0.08));
+    -fx-text-fill: #f3f7fb;
+}
+
+.tab-pane.app-tabs > .tab-header-area > .headers-region {
+    -fx-background-color: #12161d;
+}
+
+.tab-pane.app-tabs > .tab-header-area > .tab-header-background {
+    -fx-background-color: linear-gradient(to right, #11151b, #1a2330);
+}
+
+.tab-pane.app-tabs .tab .tab-label {
+    -fx-text-fill: #9fb0c1;
+}
+
+.tab-pane.app-tabs .tab:selected {
+    -fx-background-color: linear-gradient(to bottom, #223041, #16202b);
+}
+
+.tab-pane.app-tabs .tab:selected .tab-label {
+    -fx-text-fill: #efe5cf;
+}
+
+.button {
+    -fx-background-color: linear-gradient(to bottom, #243240, #18202b);
+    -fx-text-fill: #edf2f8;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #2c3c4d, #1f2935);
+}
+
+.button.primary-action {
+    -fx-background-color: linear-gradient(to bottom, #d2a24a, #9a6f22);
+    -fx-text-fill: #1e232b;
+    -fx-border-color: rgba(255, 221, 149, 0.35);
+}
+
+.button.primary-action:hover {
+    -fx-background-color: linear-gradient(to bottom, #deb15b, #ae7b27);
+}
+
+.button.danger-action {
+    -fx-background-color: linear-gradient(to bottom, #253244, #182230);
+    -fx-text-fill: #eef4fa;
+    -fx-border-color: rgba(106, 131, 164, 0.18);
+}
+
+.button.danger-action:hover {
+    -fx-background-color: linear-gradient(to bottom, #304055, #1d2938);
+}
+
+.button.theme-toggle-button {
+    -fx-background-color: linear-gradient(to bottom, #314155, #22303f);
+    -fx-text-fill: #f1f5fb;
+    -fx-font-size: 12px;
+    -fx-padding: 7 12 7 12;
+}
+
+.text-field,
+.combo-box-base {
+    -fx-background-color: rgba(20, 26, 34, 0.98);
+    -fx-text-fill: #edf2f8;
+    -fx-prompt-text-fill: #8390a0;
+    -fx-border-color: rgba(159, 176, 193, 0.22);
+}
+
+.text-field:focused,
+.combo-box-base:focused {
+    -fx-border-color: #d2a24a;
+    -fx-effect: dropshadow(gaussian, rgba(210, 162, 74, 0.14), 10, 0.2, 0, 0);
+}
+
+.list-view {
+    -fx-background-color: rgba(15, 19, 25, 0.92);
+    -fx-control-inner-background: rgba(15, 19, 25, 0.92);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+}
+
+.list-view .list-cell {
+    -fx-text-fill: #e3e8ef;
+}
+
+.list-view .list-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(210, 162, 74, 0.22), rgba(210, 162, 74, 0.08));
+    -fx-text-fill: #fff8ea;
+}
+
+.event-card {
+    -fx-background-color: rgba(13, 18, 26, 0.96);
+    -fx-border-color: rgba(106, 131, 164, 0.18);
+}
+
+.event-card-title {
+    -fx-text-fill: #f3f7fb;
+    -fx-font-size: 18px;
+}
+
+.event-card-meta {
+    -fx-text-fill: #8ea1b8;
+}
+
+.titled-pane > .title {
+    -fx-background-color: linear-gradient(to right, #0f1620, #182331);
+    -fx-border-color: rgba(106, 131, 164, 0.12);
+}
+
+.titled-pane > .content {
+    -fx-background-color: rgba(10, 15, 22, 0.88);
+    -fx-border-color: rgba(106, 131, 164, 0.12);
+}

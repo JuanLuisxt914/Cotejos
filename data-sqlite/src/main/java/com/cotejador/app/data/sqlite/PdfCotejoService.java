@@ -37,8 +37,7 @@ public class PdfCotejoService {
     private static final DateTimeFormatter OUTPUT_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     static {
-        System.setProperty("pdfbox.fontcache",
-                java.nio.file.Paths.get(System.getProperty("java.io.tmpdir"), "pdfbox.cache").toString());
+        PdfBoxRuntimeConfig.configure();
     }
 
     private final CotejoRepository cotejoRepository;
@@ -190,6 +189,7 @@ public class PdfCotejoService {
         private PDPage page;
         private PDPageContentStream contentStream;
         private float cursorY;
+        private static final float SUBTITLE_SIZE = 14f;
 
         private PdfWriter(PDDocument document) throws IOException {
             this.document = document;
@@ -203,6 +203,34 @@ public class PdfCotejoService {
         private void writeTitle(String text) throws IOException {
             writeWrapped(text, PDType1Font.HELVETICA_BOLD, TITLE_SIZE, 18f);
             blankLine();
+        }
+
+        private void writeCenteredTitle(String text, PDFont font, float fontSize) throws IOException {
+            float textWidth = font.getStringWidth(text) / 1000f * fontSize;
+            float x = (PAGE_SIZE.getWidth() - textWidth) / 2f;
+            ensureSpace(LINE_HEIGHT);
+            contentStream.beginText();
+            contentStream.setFont(font, fontSize);
+            contentStream.newLineAtOffset(x, cursorY);
+            contentStream.showText(text == null ? "" : text);
+            contentStream.endText();
+            cursorY -= LINE_HEIGHT;
+        }
+
+        private void writeKeyValueTable(String[][] data) throws IOException {
+            for (String[] row : data) {
+                writeLine(row[0] + " " + row[1], PDType1Font.HELVETICA, TEXT_SIZE);
+            }
+            blankLine();
+        }
+
+        private void writeHorizontalLine() throws IOException {
+            ensureSpace(LINE_HEIGHT);
+            contentStream.setLineWidth(0.5f);
+            contentStream.moveTo(MARGIN, cursorY - 2f);
+            contentStream.lineTo(PAGE_SIZE.getWidth() - MARGIN, cursorY - 2f);
+            contentStream.stroke();
+            cursorY -= 8f;
         }
 
         private void writeSectionTitle(String text) throws IOException {

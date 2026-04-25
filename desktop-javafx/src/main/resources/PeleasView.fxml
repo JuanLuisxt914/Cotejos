@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.cotejador.app.desktop.PeleasController"
+            fitToWidth="true">
+
+    <content>
+        <VBox spacing="12" styleClass="view-container">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+
+            <Label text="Cotejo" styleClass="view-title"/>
+
+            <TitledPane text="Generar cotejo" expanded="true" collapsible="false">
+                <content>
+                    <VBox spacing="10">
+                        <HBox spacing="16" fillHeight="true">
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="Tolerancia" labelFor="$toleranciaField"/>
+                                <TextField fx:id="toleranciaField"
+                                           promptText="Tolerancia en gramos"
+                                           accessibleText="Campo de tolerancia en gramos"/>
+
+                                <Label text="Partidos prioritarios" labelFor="$partidosPrioritariosField"/>
+                                <TextField fx:id="partidosPrioritariosField"
+                                           promptText="Partidos prioritarios separados por coma"
+                                           accessibleText="Campo de partidos prioritarios separados por coma"/>
+
+                                <VBox fx:id="reglasCotejoBox" spacing="6">
+                                    <Label text="Forma de generar peleas" styleClass="section-title"/>
+                                    <Label text="Modo de generacion" labelFor="$modoCotejoComboBox"/>
+                                    <ComboBox fx:id="modoCotejoComboBox"
+                                              accessibleText="Modo de generacion del cotejo"/>
+
+                                    <CheckBox fx:id="ultimaRondaSoloObligatoriosCheckBox"
+                                              text="La ultima ronda solo coteja obligatorios"
+                                              accessibleText="Hacer que la ultima ronda solo considere gallos obligatorios"/>
+
+                                    <CheckBox fx:id="excluirObligatoriosDelCotejoCheckBox"
+                                              text="Excluir gallo obligatorio del cotejo"
+                                              accessibleText="Excluir el gallo obligatorio para revision manual"/>
+                                </VBox>
+
+                                <Button text="Cotejar" onAction="#cotejarEvento" fx:id="cotejarButton" styleClass="primary-action"
+                                        accessibleText="Generar cotejo del evento seleccionado"/>
+                            </VBox>
+
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="Peleas generadas" styleClass="section-title"/>
+                                <TableView fx:id="peleasCotejoTable"
+                                           prefHeight="280.0"
+                                           VBox.vgrow="ALWAYS"
+                                           accessibleText="Tabla de peleas generadas">
+                                    <columns>
+                                        <TableColumn fx:id="gallo1Column" text="Gallo 1" prefWidth="160.0"/>
+                                        <TableColumn fx:id="partido1Column" text="Partido 1" prefWidth="120.0"/>
+                                        <TableColumn fx:id="gallo2Column" text="Gallo 2" prefWidth="160.0"/>
+                                        <TableColumn fx:id="partido2Column" text="Partido 2" prefWidth="120.0"/>
+                                        <TableColumn fx:id="diferenciaColumn" text="Dif. peso" prefWidth="90.0"/>
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </HBox>
+
+                        <Label text="Gallos sin pelea" styleClass="section-title"/>
+                        <ListView fx:id="gallosSinPeleaList"
+                                  prefHeight="120.0"
+                                  accessibleText="Lista de gallos sin pelea"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+            <TitledPane text="Restricciones" expanded="true" collapsible="false">
+                <content>
+                    <VBox spacing="8">
+                        <Label text="Partido origen" labelFor="$restriccionPartidoOrigenCombo"/>
+                        <ComboBox fx:id="restriccionPartidoOrigenCombo"
+                                  promptText="Partido 1"
+                                  accessibleText="Seleccionar partido origen"/>
+
+                        <Label text="Partido destino" labelFor="$restriccionPartidoDestinoCombo"/>
+                        <ComboBox fx:id="restriccionPartidoDestinoCombo"
+                                  promptText="Partido 2"
+                                  accessibleText="Seleccionar partido destino"/>
+
+                        <HBox spacing="6">
+                            <Button text="Agregar restriccion" onAction="#agregarRestriccion" styleClass="primary-action"
+                                    fx:id="agregarRestriccionButton"
+                                    accessibleText="Agregar una restriccion entre dos partidos"/>
+                            <Button text="Eliminar restriccion" onAction="#eliminarRestriccion" styleClass="danger-action"
+                                    fx:id="eliminarRestriccionButton"
+                                    accessibleText="Eliminar la restriccion seleccionada"/>
+                        </HBox>
+
+                        <Label text="Restricciones registradas" styleClass="section-title"/>
+                        <ListView fx:id="restriccionList"
+                                  prefHeight="160.0"
+                                  accessibleText="Lista de restricciones registradas"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+
+            <TitledPane text="Cotejos guardados" expanded="true" collapsible="false">
+                <content>
+                    <VBox spacing="8">
+                        <Label text="Cotejos guardados" styleClass="section-title"/>
+                        <ListView fx:id="cotejoGuardadoList"
+                                  prefHeight="140.0"
+                                  accessibleText="Lista de cotejos guardados"/>
+
+                        <HBox spacing="6">
+                            <Button text="Ver cotejo" onAction="#verCotejoGuardado"
+                                    fx:id="verCotejoGuardadoButton"
+                                    accessibleText="Ver detalle del cotejo guardado seleccionado"/>
+                            <Button text="Exportar PDF" onAction="#exportarPdfCotejoGuardado" styleClass="primary-action"
+                                    fx:id="exportarPdfButton"
+                                    accessibleText="Exportar el cotejo guardado a PDF"/>
+                            <Button text="Eliminar cotejo" onAction="#eliminarCotejoGuardado" styleClass="danger-action"
+                                    fx:id="eliminarCotejoGuardadoButton"
+                                    accessibleText="Eliminar el cotejo guardado seleccionado"/>
+                        </HBox>
+
+                        <Label text="Peleas guardadas" styleClass="section-title"/>
+                        <ListView fx:id="peleaGuardadaList"
+                                  prefHeight="120.0"
+                                  accessibleText="Lista de peleas guardadas"/>
+
+                        <Label text="Gallos sin pelea guardados" styleClass="section-title"/>
+                        <ListView fx:id="galloSinPeleaGuardadoList"
+                                  prefHeight="120.0"
+                                  accessibleText="Lista de gallos sin pelea guardados"/>
+                    </VBox>
+                </content>
+            </TitledPane>
+        </VBox>
+    </content>
+</ScrollPane>

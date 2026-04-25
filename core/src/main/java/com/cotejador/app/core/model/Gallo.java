@@ -6,6 +6,7 @@ public class Gallo {
     private double peso;
     private String anillo;
     private Long partidoId;
+    private boolean obligatorio;
 
     public Gallo() {
     }
@@ -16,6 +17,16 @@ public class Gallo {
         this.peso = peso;
         this.anillo = anillo;
         this.partidoId = partidoId;
+        this.obligatorio = false;
+    }
+
+    public Gallo(Long id, String nombre, double peso, String anillo, Long partidoId, boolean obligatorio) {
+        this.id = id;
+        this.nombre = nombre;
+        this.peso = peso;
+        this.anillo = anillo;
+        this.partidoId = partidoId;
+        this.obligatorio = obligatorio;
     }
 
     public Long getId() {
@@ -58,8 +69,17 @@ public class Gallo {
         this.partidoId = partidoId;
     }
 
+    public boolean isObligatorio() {
+        return obligatorio;
+    }
+
+    public void setObligatorio(boolean obligatorio) {
+        this.obligatorio = obligatorio;
+    }
+
     @Override
     public String toString() {
-        return id + " - " + nombre + " | " + peso + " | " + anillo;
+        return id + " - " + nombre + " | " + peso + " | " + anillo +
+                (obligatorio ? " | obligatorio" : "");
     }
 }

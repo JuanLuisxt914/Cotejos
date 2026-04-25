@@ -1,6 +1,7 @@
 package com.cotejador.app.core.cotejo;
 
 import com.cotejador.app.core.model.Gallo;
+import com.cotejador.app.core.model.ModoCotejo;
 import com.cotejador.app.core.model.RestriccionPartido;
 import org.junit.Test;
 
@@ -290,8 +291,47 @@ public class MotorCotejoTest {
         assertIds(resultado.getGallosSinPelea(), 2L);
     }
 
+    @Test
+    public void enModoRondasCadaPartidoAportaUnGalloPorRondaHastaAgotarse() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A1", 1000, 10L),
+                        gallo(2L, "A2", 1002, 10L),
+                        gallo(3L, "A3", 1004, 10L),
+                        gallo(4L, "B1", 1001, 20L),
+                        gallo(5L, "B2", 1003, 20L),
+                        gallo(6L, "B3", 1005, 20L)
+                ),
+                parametrosConModo(5, ModoCotejo.RONDAS)
+        );
+
+        assertEquals(3, resultado.getPeleas().size());
+        assertEquals(0, resultado.getGallosSinPelea().size());
+        assertNoRepeatedIds(resultado.getPeleas());
+    }
+
+    @Test
+    public void enModoRondasPuedeDejarFueraElObligatorioDelCotejo() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        galloObligatorio(1L, "A1", 1000, 10L),
+                        gallo(2L, "A2", 1002, 10L),
+                        gallo(3L, "B1", 1001, 20L)
+                ),
+                parametrosConModo(5, ModoCotejo.RONDAS, true)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L);
+        assertNoRepeatedIds(resultado.getPeleas());
+    }
+
     private Gallo gallo(Long id, String nombre, double peso, Long partidoId) {
         return new Gallo(id, nombre, peso, "", partidoId);
+    }
+
+    private Gallo galloObligatorio(Long id, String nombre, double peso, Long partidoId) {
+        return new Gallo(id, nombre, peso, "", partidoId, true);
     }
 
     private RestriccionPartido restriccion(Long partidoOrigenId, Long partidoDestinoId) {
@@ -321,6 +361,23 @@ public class MotorCotejoTest {
                 tolerancia,
                 Collections.<Long, String>emptyMap(),
                 new ArrayList<RestriccionPartido>(Arrays.asList(restricciones))
+        );
+    }
+
+    private ParametrosCotejo parametrosConModo(double tolerancia, ModoCotejo modoCotejo) {
+        return parametrosConModo(tolerancia, modoCotejo, false);
+    }
+
+    private ParametrosCotejo parametrosConModo(double tolerancia, ModoCotejo modoCotejo, boolean excluirObligatorios) {
+        return new ParametrosCotejo(
+                tolerancia,
+                Collections.<Long, String>emptyMap(),
+                Collections.<RestriccionPartido>emptyList(),
+                3,
+                1,
+                false,
+                modoCotejo,
+                excluirObligatorios
         );
     }
 

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="eventosRoot" prefHeight="498.0" prefWidth="525.0" spacing="8" styleClass="view-container" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cotejador.app.desktop.EventosController">
+
+    <padding>
+        <Insets bottom="12" left="12" right="12" top="12" />
+    </padding>
+
+    <Label styleClass="view-title" text="Eventos" />
+
+    <GridPane hgap="0.0" vgap="0.0" VBox.vgrow="ALWAYS">
+        <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="40.0" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="60.0" />
+        </columnConstraints>
+
+        <VBox maxWidth="Infinity" spacing="8" styleClass="events-form-panel" GridPane.columnIndex="0">
+            <Label text="Nombre" />
+            <TextField fx:id="eventoNombreField" accessibleText="Nombre del evento" maxWidth="Infinity" promptText="Nombre del evento" />
+
+            <Label text="Fecha" />
+            <DatePicker fx:id="eventoFechaPicker" accessibleText="Fecha del evento" maxWidth="Infinity" />
+
+            <Label text="Gallos por partido" />
+            <Spinner fx:id="gallosPorPartidoSpinner" accessibleText="Cantidad total de gallos por partido" maxWidth="Infinity" />
+
+            <Label text="Gallos obligatorios" />
+            <Spinner fx:id="gallosObligatoriosSpinner" accessibleText="Cantidad de gallos obligatorios" maxWidth="Infinity" />
+
+            <VBox spacing="8" styleClass="event-actions-box">
+                <Button fx:id="crearEventoButton" accessibleText="Crear evento" maxWidth="Infinity" onAction="#crearEvento" styleClass="primary-action" text="Crear evento" />
+                <Button fx:id="editarEventoButton" accessibleText="Editar evento seleccionado" maxWidth="Infinity" onAction="#editarEvento" text="Editar evento" />
+                <Button fx:id="eliminarEventoButton" accessibleText="Eliminar evento seleccionado" maxWidth="Infinity" onAction="#eliminarEvento" styleClass="danger-action" text="Eliminar evento" />
+            </VBox>
+        </VBox>
+
+        <VBox maxWidth="Infinity" spacing="8" styleClass="events-list-panel" GridPane.columnIndex="1">
+            <Label styleClass="section-title" text="Listado de eventos" />
+            <ListView fx:id="eventoList" accessibleText="Lista de eventos" maxWidth="Infinity" VBox.vgrow="ALWAYS">
+            </ListView>
+        </VBox>
+      <rowConstraints>
+         <RowConstraints />
+      </rowConstraints>
+    </GridPane>
+
+</VBox>
