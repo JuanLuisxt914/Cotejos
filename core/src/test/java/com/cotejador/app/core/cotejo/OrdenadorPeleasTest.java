@@ -111,8 +111,8 @@ public class OrdenadorPeleasTest {
 
     private Pelea pelea(Long gallo1Id, Long partido1Id, Long gallo2Id, Long partido2Id) {
         return new Pelea(
-                new Gallo(gallo1Id, "Gallo " + gallo1Id, 1000, "", partido1Id),
-                new Gallo(gallo2Id, "Gallo " + gallo2Id, 1001, "", partido2Id),
+                new Gallo(gallo1Id, 1000, "", partido1Id),
+                new Gallo(gallo2Id, 1001, "", partido2Id),
                 1
         );
     }

@@ -7,9 +7,11 @@ import com.cotejador.app.data.sqlite.GalloRepository;
 import com.cotejador.app.data.sqlite.PartidoRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 
@@ -17,9 +19,6 @@ public class RegistroController {
 
     @FXML
     private TextField partidoNombreField;
-
-    @FXML
-    private TextField galloNombreField;
 
     @FXML
     private TextField galloPesoField;
@@ -71,15 +70,28 @@ public class RegistroController {
         this.galloRepository = galloRepository;
         partidoList.setItems(partidos);
         galloList.setItems(gallos);
+        galloList.setCellFactory(listView -> new ListCell<Gallo>() {
+            @Override
+            protected void updateItem(Gallo item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    return;
+                }
+
+                setText(formatGalloListItem(item, getIndex()));
+            }
+        });
         configureSelectionListeners();
     }
 
     @FXML
     public void initialize() {
         partidoNombreField.setPromptText("Nombre del partido");
-        galloNombreField.setPromptText("Nombre del gallo");
         galloPesoField.setPromptText("Peso en gramos");
         galloAnilloField.setPromptText("Anillo");
+        updateGalloObligatorioVisibility(null);
     }
 
     private void configureSelectionListeners() {
@@ -99,7 +111,6 @@ public class RegistroController {
 
         galloList.getSelectionModel().selectedItemProperty().addListener((observable, oldGallo, selectedGallo) -> {
             if (selectedGallo != null) {
-                galloNombreField.setText(selectedGallo.getNombre());
                 galloPesoField.setText(String.valueOf(selectedGallo.getPeso()));
                 galloAnilloField.setText(selectedGallo.getAnillo() == null ? "" : selectedGallo.getAnillo());
                 galloObligatorioCheckBox.setSelected(selectedGallo.isObligatorio());
@@ -117,6 +128,7 @@ public class RegistroController {
             partidos.clear();
             gallos.clear();
         }
+        updateGalloObligatorioVisibility(evento);
         clearFields();
     }
 
@@ -145,6 +157,7 @@ public class RegistroController {
             loadPartidos(partido.getId());
             clearPartidoFields();
             shellController.setStatus("Partido agregado.");
+            focusGalloPeso();
         } catch (Exception e) {
             shellController.showError("Error al agregar partido", e);
         }
@@ -210,6 +223,7 @@ public class RegistroController {
             loadGallos(selectedPartido.getId(), gallo.getId());
             clearGalloFields();
             shellController.setStatus("Gallo agregado.");
+            focusGalloPeso();
         } catch (Exception e) {
             shellController.showError("Error al agregar gallo", e);
         }
@@ -234,8 +248,10 @@ public class RegistroController {
 
             galloRepository.actualizar(gallo);
             loadGallos(selectedPartido.getId(), gallo.getId());
+            clearGalloSelection();
             clearGalloFields();
             shellController.setStatus("Gallo actualizado.");
+            focusGalloPeso();
         } catch (Exception e) {
             shellController.showError("Error al editar gallo", e);
         }
@@ -279,15 +295,10 @@ public class RegistroController {
     }
 
     private Gallo readGalloFromFields(Long id, Long partidoId) {
-        String nombre = galloNombreField.getText().trim();
         String pesoText = galloPesoField.getText().trim();
         String anillo = galloAnilloField.getText().trim();
         boolean obligatorio = galloObligatorioCheckBox.isSelected();
 
-        if (nombre.isEmpty()) {
-            shellController.setStatus("El nombre del gallo es obligatorio.");
-            return null;
-        }
         if (pesoText.isEmpty()) {
             shellController.setStatus("El peso del gallo es obligatorio.");
             return null;
@@ -306,7 +317,22 @@ public class RegistroController {
             return null;
         }
 
-        return new Gallo(id, nombre, peso, anillo, partidoId, obligatorio);
+        return new Gallo(id, peso, anillo, partidoId, obligatorio);
+    }
+
+    @FXML
+    public void focusGalloAnillo() {
+        if (galloAnilloField == null) {
+            return;
+        }
+        Platform.runLater(() -> galloAnilloField.requestFocus());
+    }
+
+    private void focusGalloPeso() {
+        if (galloPesoField == null) {
+            return;
+        }
+        Platform.runLater(() -> galloPesoField.requestFocus());
     }
 
     private void selectPartidoById(Long id) {
@@ -345,9 +371,73 @@ public class RegistroController {
     }
 
     private void clearGalloFields() {
-        galloNombreField.clear();
         galloPesoField.clear();
         galloAnilloField.clear();
         galloObligatorioCheckBox.setSelected(false);
+    }
+
+    private void updateGalloObligatorioVisibility(Evento evento) {
+        boolean mostrar = evento != null && evento.getGallosPorPartido() > 1;
+        if (galloObligatorioCheckBox != null) {
+            galloObligatorioCheckBox.setVisible(mostrar);
+            galloObligatorioCheckBox.setManaged(mostrar);
+            if (!mostrar) {
+                galloObligatorioCheckBox.setSelected(false);
+            }
+        }
+    }
+
+    private void clearGalloSelection() {
+        if (galloList != null) {
+            galloList.getSelectionModel().clearSelection();
+        }
+    }
+
+    private String formatGalloListItem(Gallo gallo, int index) {
+        String partidoNombre = obtenerNombrePartidoSeleccionado(gallo);
+        int gallosPorPartido = eventoActual == null ? 1 : eventoActual.getGallosPorPartido();
+        if (gallosPorPartido <= 0) {
+            gallosPorPartido = 1;
+        }
+        String entrada = "E" + ((index / gallosPorPartido) + 1);
+        String peso = formatNumero(gallo.getPeso());
+        String anillo = gallo.getAnillo() == null || gallo.getAnillo().trim().isEmpty()
+                ? "-"
+                : gallo.getAnillo().trim();
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(entrada)
+                .append(" ")
+                .append(partidoNombre)
+                .append(" | ")
+                .append(peso)
+                .append(" | ")
+                .append(anillo);
+
+        if (gallo.isObligatorio()) {
+            builder.append(" | obligatorio");
+        }
+
+        return builder.toString();
+    }
+
+    private String obtenerNombrePartidoSeleccionado(Gallo gallo) {
+        Partido selectedPartido = partidoList.getSelectionModel().getSelectedItem();
+        if (selectedPartido != null && selectedPartido.getId() != null
+                && selectedPartido.getId().equals(gallo.getPartidoId())) {
+            return safeText(selectedPartido.getNombre());
+        }
+        return "PARTIDO " + gallo.getPartidoId();
+    }
+
+    private String formatNumero(double numero) {
+        if (numero == Math.rint(numero)) {
+            return String.valueOf((long) numero);
+        }
+        return String.valueOf(numero);
+    }
+
+    private String safeText(String value) {
+        return value == null || value.trim().isEmpty() ? "-" : value.trim();
     }
 }

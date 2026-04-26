@@ -2,7 +2,6 @@ package com.cotejador.app.core.model;
 
 public class Gallo {
     private Long id;
-    private String nombre;
     private double peso;
     private String anillo;
     private Long partidoId;
@@ -11,18 +10,16 @@ public class Gallo {
     public Gallo() {
     }
 
-    public Gallo(Long id, String nombre, double peso, String anillo, Long partidoId) {
+    public Gallo(Long id, double peso, String anillo, Long partidoId) {
         this.id = id;
-        this.nombre = nombre;
         this.peso = peso;
         this.anillo = anillo;
         this.partidoId = partidoId;
         this.obligatorio = false;
     }
 
-    public Gallo(Long id, String nombre, double peso, String anillo, Long partidoId, boolean obligatorio) {
+    public Gallo(Long id, double peso, String anillo, Long partidoId, boolean obligatorio) {
         this.id = id;
-        this.nombre = nombre;
         this.peso = peso;
         this.anillo = anillo;
         this.partidoId = partidoId;
@@ -35,14 +32,6 @@ public class Gallo {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
     }
 
     public double getPeso() {
@@ -79,7 +68,7 @@ public class Gallo {
 
     @Override
     public String toString() {
-        return id + " - " + nombre + " | " + peso + " | " + anillo +
+        return "ID " + id + " | " + peso + " | " + anillo +
                 (obligatorio ? " | obligatorio" : "");
     }
 }

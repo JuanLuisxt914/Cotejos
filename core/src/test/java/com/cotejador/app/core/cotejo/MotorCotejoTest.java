@@ -327,11 +327,11 @@ public class MotorCotejoTest {
     }
 
     private Gallo gallo(Long id, String nombre, double peso, Long partidoId) {
-        return new Gallo(id, nombre, peso, "", partidoId);
+        return new Gallo(id, peso, "", partidoId);
     }
 
     private Gallo galloObligatorio(Long id, String nombre, double peso, Long partidoId) {
-        return new Gallo(id, nombre, peso, "", partidoId, true);
+        return new Gallo(id, peso, "", partidoId, true);
     }
 
     private RestriccionPartido restriccion(Long partidoOrigenId, Long partidoDestinoId) {

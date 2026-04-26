@@ -63,11 +63,17 @@
     </center>
 
     <bottom>
-        <Label fx:id="statusLabel" prefHeight="18.0" prefWidth="1100.0" styleClass="status-label" text="" wrapText="true">
-            <BorderPane.margin>
+        <HBox>
+            <padding>
                 <Insets bottom="12" left="12" right="12" top="12" />
-            </BorderPane.margin>
-        </Label>
+            </padding>
+            <Label fx:id="statusLabel"
+                   maxWidth="Infinity"
+                   styleClass="status-label"
+                   text=""
+                   wrapText="true"
+                   HBox.hgrow="ALWAYS" />
+        </HBox>
     </bottom>
 
 </BorderPane>

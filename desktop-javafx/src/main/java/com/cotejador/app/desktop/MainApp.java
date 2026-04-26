@@ -21,13 +21,14 @@ public class MainApp extends Application {
         ShellController shellController = shellLoader.getController();
         shellController.initialize();
 
-        Scene scene = new Scene(root, 800, 670);
+        Scene scene = new Scene(root, 800, 680);
         scene.getStylesheets().add(getClass().getResource("/app.css").toExternalForm());
-        scene.getStylesheets().add(getClass().getResource("/theme-dark.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/theme-light.css").toExternalForm());
 
         primaryStage.setTitle("Cotejador");
         primaryStage.setScene(scene);
         primaryStage.show();
+        shellController.setPrimaryStage(primaryStage);
     }
 
     public static void main(String[] args) {

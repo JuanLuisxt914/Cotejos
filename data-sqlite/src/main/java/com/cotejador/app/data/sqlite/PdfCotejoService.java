@@ -178,10 +178,11 @@ public class PdfCotejoService {
         }
 
         String partido = describePartido(gallo.getPartidoId(), partidosPorId);
-        return safe(gallo.getNombre()) +
+        return "ID " + gallo.getId() +
                 " | Partido: " + partido +
                 " | Peso: " + formatNumero(gallo.getPeso()) + " g" +
-                " | Anillo: " + safe(gallo.getAnillo());
+                " | Anillo: " + safe(gallo.getAnillo()) +
+                (gallo.isObligatorio() ? " | obligatorio" : "");
     }
 
     private final class PdfWriter {
@@ -255,10 +256,10 @@ public class PdfCotejoService {
             writeLine("Orden: " + pelea.getOrden(), PDType1Font.HELVETICA_BOLD, TEXT_SIZE);
             writeLine("Partido 1: " + describePartido(gallo1 == null ? null : gallo1.getPartidoId(), partidosPorId),
                     PDType1Font.HELVETICA, TEXT_SIZE);
-            writeLine("Gallo 1: " + describeGallo(gallo1, partidosPorId), PDType1Font.HELVETICA, TEXT_SIZE);
+            writeLine("Participante 1: " + describeGallo(gallo1, partidosPorId), PDType1Font.HELVETICA, TEXT_SIZE);
             writeLine("Partido 2: " + describePartido(gallo2 == null ? null : gallo2.getPartidoId(), partidosPorId),
                     PDType1Font.HELVETICA, TEXT_SIZE);
-            writeLine("Gallo 2: " + describeGallo(gallo2, partidosPorId), PDType1Font.HELVETICA, TEXT_SIZE);
+            writeLine("Participante 2: " + describeGallo(gallo2, partidosPorId), PDType1Font.HELVETICA, TEXT_SIZE);
             writeLine("Diferencia de peso: " + formatNumero(pelea.getDiferenciaPeso()) + " g",
                     PDType1Font.HELVETICA, TEXT_SIZE);
             blankLine();
@@ -268,11 +269,11 @@ public class PdfCotejoService {
                                         Map<Long, Partido> partidosPorId) throws Exception {
             Gallo gallo = loadGallo(galloSinPelea.getGalloId());
             if (gallo == null) {
-                writeLine("Gallo " + galloSinPelea.getGalloId(), PDType1Font.HELVETICA, TEXT_SIZE);
+                writeLine("ID " + galloSinPelea.getGalloId(), PDType1Font.HELVETICA, TEXT_SIZE);
                 return;
             }
 
-            writeLine("Gallo: " + describeGallo(gallo, partidosPorId), PDType1Font.HELVETICA, TEXT_SIZE);
+            writeLine("Participante: " + describeGallo(gallo, partidosPorId), PDType1Font.HELVETICA, TEXT_SIZE);
         }
 
         private void writeHorizontalRule() throws IOException {

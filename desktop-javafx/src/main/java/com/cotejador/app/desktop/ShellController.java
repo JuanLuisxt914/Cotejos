@@ -10,6 +10,7 @@ import com.cotejador.app.data.sqlite.PdfCotejoService;
 import com.cotejador.app.data.sqlite.RestriccionPartidoRepository;
 import com.cotejador.app.data.sqlite.SQLiteConnectionFactory;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,6 +31,13 @@ public class ShellController {
     }
 
     private static final double DRAWER_WIDTH = 250.0;
+    private static final double EVENTOS_WINDOW_WIDTH = 800.0;
+    private static final double EVENTOS_WINDOW_HEIGHT = 680.0;
+
+    private enum WindowMode {
+        EVENTOS,
+        CONTENIDO
+    }
 
     @FXML
     private BorderPane shellRoot;
@@ -98,9 +106,11 @@ public class ShellController {
     private CotejoRepository cotejoRepository;
     private PdfCotejoService pdfCotejoService;
     private RestriccionPartidoRepository restriccionPartidoRepository;
-    private Theme currentTheme = Theme.DARK;
+    private Theme currentTheme = Theme.LIGHT;
     private Evento currentEvento;
     private boolean drawerOpen;
+    private WindowMode currentWindowMode = WindowMode.EVENTOS;
+    private javafx.stage.Stage primaryStage;
 
     public void initialize() {
         SQLiteConnectionFactory connectionFactory = new SQLiteConnectionFactory();
@@ -119,6 +129,12 @@ public class ShellController {
         refreshThemeToggleText();
         setDrawerVisible(false);
         updateEventInfo(null, ModoCotejo.ALEATORIO);
+        applyWindowMode();
+    }
+
+    public void setPrimaryStage(javafx.stage.Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        applyWindowMode();
     }
 
     private void cargarVistasHijas() {
@@ -227,11 +243,13 @@ public class ShellController {
     }
 
     public void mostrarVistaEventos() {
+        currentWindowMode = WindowMode.EVENTOS;
         setHostVisibility(true, false, false);
         if (menuButton != null) {
             menuButton.setDisable(true);
         }
         setActiveDrawerView(null);
+        applyWindowMode();
     }
 
     public void mostrarVistaRegistro() {
@@ -239,8 +257,10 @@ public class ShellController {
             mostrarVistaEventos();
             return;
         }
+        currentWindowMode = WindowMode.CONTENIDO;
         setHostVisibility(false, true, false);
         setActiveDrawerView(registroButton());
+        applyWindowMode();
     }
 
     public void mostrarVistaPeleas() {
@@ -248,8 +268,10 @@ public class ShellController {
             mostrarVistaEventos();
             return;
         }
+        currentWindowMode = WindowMode.CONTENIDO;
         setHostVisibility(false, false, true);
         setActiveDrawerView(peleasButton());
+        applyWindowMode();
     }
 
     @FXML
@@ -428,5 +450,29 @@ public class ShellController {
 
     private Button peleasButton() {
         return drawerPeleasButton;
+    }
+
+    private void applyWindowMode() {
+        if (primaryStage == null) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            if (primaryStage == null) {
+                return;
+            }
+
+            if (currentWindowMode == WindowMode.EVENTOS) {
+                primaryStage.setMaximized(false);
+                primaryStage.setResizable(false);
+                primaryStage.setWidth(EVENTOS_WINDOW_WIDTH);
+                primaryStage.setHeight(EVENTOS_WINDOW_HEIGHT);
+                primaryStage.centerOnScreen();
+                return;
+            }
+
+            primaryStage.setResizable(true);
+            primaryStage.setMaximized(true);
+        });
     }
 }

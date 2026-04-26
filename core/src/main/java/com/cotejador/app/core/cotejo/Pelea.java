@@ -27,7 +27,7 @@ public class Pelea {
 
     @Override
     public String toString() {
-        return gallo1.getNombre() + " vs " + gallo2.getNombre() +
+        return gallo1 + " vs " + gallo2 +
                 " | dif: " + diferenciaPeso;
     }
 }

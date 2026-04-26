@@ -42,9 +42,9 @@ public class PdfCotejoServiceTest {
         partidoRepository.insertar(partido1);
         partidoRepository.insertar(partido2);
 
-        Gallo gallo1 = new Gallo(null, "Gallo Uno", 2500.0, "A-1", partido1.getId());
-        Gallo gallo2 = new Gallo(null, "Gallo Dos", 2492.5, "B-2", partido2.getId());
-        Gallo gallo3 = new Gallo(null, "Gallo Libre", 2400.0, "C-3", partido1.getId());
+        Gallo gallo1 = new Gallo(null, 2500.0, "A-1", partido1.getId());
+        Gallo gallo2 = new Gallo(null, 2492.5, "B-2", partido2.getId());
+        Gallo gallo3 = new Gallo(null, 2400.0, "C-3", partido1.getId());
         galloRepository.insertar(gallo1);
         galloRepository.insertar(gallo2);
         galloRepository.insertar(gallo3);

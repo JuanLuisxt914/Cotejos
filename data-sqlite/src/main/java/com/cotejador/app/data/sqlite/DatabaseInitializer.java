@@ -28,7 +28,6 @@ public class DatabaseInitializer {
     private static final String CREATE_GALLOS_TABLE =
             "CREATE TABLE IF NOT EXISTS gallos (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "nombre TEXT NOT NULL, " +
                     "peso REAL NOT NULL CHECK (peso > 0), " +
                     "anillo TEXT, " +
                     "obligatorio INTEGER NOT NULL DEFAULT 0, " +
@@ -107,7 +106,9 @@ public class DatabaseInitializer {
     }
 
     private boolean schemaNeedsMigration(Connection connection) throws SQLException {
-        return !hasForeignKeys(connection, "partidos") || !hasForeignKeys(connection, "gallos");
+        return !hasForeignKeys(connection, "partidos")
+                || !hasForeignKeys(connection, "gallos")
+                || hasColumn(connection, "gallos", "nombre");
     }
 
     private void ensureEventoColumns(Connection connection) throws SQLException {
@@ -185,8 +186,8 @@ public class DatabaseInitializer {
             statement.execute("INSERT INTO partidos (id, nombre, evento_id) " +
                     "SELECT p.id, p.nombre, p.evento_id FROM partidos_old p " +
                     "INNER JOIN eventos e ON e.id = p.evento_id");
-            statement.execute("INSERT INTO gallos (id, nombre, peso, anillo, obligatorio, partido_id) " +
-                    "SELECT g.id, g.nombre, g.peso, g.anillo, 0, g.partido_id FROM gallos_old g " +
+            statement.execute("INSERT INTO gallos (id, peso, anillo, obligatorio, partido_id) " +
+                    "SELECT g.id, g.peso, g.anillo, 0, g.partido_id FROM gallos_old g " +
                     "INNER JOIN partidos p ON p.id = g.partido_id " +
                     "WHERE g.peso > 0");
 

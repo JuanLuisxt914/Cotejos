@@ -35,9 +35,9 @@ public class CotejoRepositoryTest {
         partidoRepository.insertar(partido1);
         partidoRepository.insertar(partido2);
 
-        Gallo gallo1 = new Gallo(null, "Gallo 1", 1000, "", partido1.getId());
-        Gallo gallo2 = new Gallo(null, "Gallo 2", 1002, "", partido2.getId());
-        Gallo gallo3 = new Gallo(null, "Gallo 3", 1100, "", partido2.getId());
+        Gallo gallo1 = new Gallo(null, 1000, "", partido1.getId());
+        Gallo gallo2 = new Gallo(null, 1002, "", partido2.getId());
+        Gallo gallo3 = new Gallo(null, 1100, "", partido2.getId());
         galloRepository.insertar(gallo1);
         galloRepository.insertar(gallo2);
         galloRepository.insertar(gallo3);

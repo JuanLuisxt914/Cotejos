@@ -17,7 +17,8 @@
 <ScrollPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.cotejador.app.desktop.PeleasController"
-            fitToWidth="true">
+            fitToWidth="true"
+            styleClass="events-view">
 
     <content>
         <VBox spacing="12" styleClass="view-container">
@@ -68,9 +69,9 @@
                                            VBox.vgrow="ALWAYS"
                                            accessibleText="Tabla de peleas generadas">
                                     <columns>
-                                        <TableColumn fx:id="gallo1Column" text="Gallo 1" prefWidth="160.0"/>
+                                        <TableColumn fx:id="gallo1Column" text="Participante 1" prefWidth="160.0"/>
                                         <TableColumn fx:id="partido1Column" text="Partido 1" prefWidth="120.0"/>
-                                        <TableColumn fx:id="gallo2Column" text="Gallo 2" prefWidth="160.0"/>
+                                        <TableColumn fx:id="gallo2Column" text="Participante 2" prefWidth="160.0"/>
                                         <TableColumn fx:id="partido2Column" text="Partido 2" prefWidth="120.0"/>
                                         <TableColumn fx:id="diferenciaColumn" text="Dif. peso" prefWidth="90.0"/>
                                     </columns>

@@ -137,9 +137,9 @@
 }
 
 .events-view .button.danger-action {
-    -fx-background-color: linear-gradient(to bottom, #9f4b4b, #74333b);
-    -fx-text-fill: #fff7f7;
-    -fx-border-color: rgba(143, 63, 63, 0.20);
+    -fx-background-color: linear-gradient(to bottom, #9D4A53, #7E2E36);
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: rgba(126, 46, 54, 0.24);
 }
 
 .events-view .list-view {
@@ -233,13 +233,13 @@
 }
 
 .button.danger-action {
-    -fx-background-color: linear-gradient(to bottom, #8e2c34, #611a22);
-    -fx-text-fill: #fff5f5;
-    -fx-border-color: rgba(255, 150, 160, 0.28);
+    -fx-background-color: linear-gradient(to bottom, #9D4A53, #7E2E36);
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: rgba(126, 46, 54, 0.24);
 }
 
 .button.danger-action:hover {
-    -fx-background-color: linear-gradient(to bottom, #a63a43, #74202a);
+    -fx-background-color: linear-gradient(to bottom, #AE5961, #8E3941);
 }
 
 .text-field,

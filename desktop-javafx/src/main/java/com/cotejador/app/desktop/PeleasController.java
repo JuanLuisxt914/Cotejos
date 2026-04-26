@@ -170,7 +170,7 @@ public class PeleasController {
         }
         if (gallo1Column != null) {
             gallo1Column.setCellValueFactory(data ->
-                    new ReadOnlyStringWrapper(data.getValue().getGallo1().getNombre()));
+                    new ReadOnlyStringWrapper(data.getValue().getGallo1().toString()));
         }
         if (partido1Column != null) {
             partido1Column.setCellValueFactory(data ->
@@ -178,7 +178,7 @@ public class PeleasController {
         }
         if (gallo2Column != null) {
             gallo2Column.setCellValueFactory(data ->
-                    new ReadOnlyStringWrapper(data.getValue().getGallo2().getNombre()));
+                    new ReadOnlyStringWrapper(data.getValue().getGallo2().toString()));
         }
         if (partido2Column != null) {
             partido2Column.setCellValueFactory(data ->
