@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
 
 public class DatabaseInitializer {
     private static final String CREATE_EVENTOS_TABLE =
@@ -99,16 +101,8 @@ public class DatabaseInitializer {
             statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
             createCotejoTables(statement);
             ensureEventoColumns(connection);
-            if (schemaNeedsMigration(connection)) {
-                migrateSchema(connection);
-            }
+            repairBrokenCotejoSchema(connection, statement);
         }
-    }
-
-    private boolean schemaNeedsMigration(Connection connection) throws SQLException {
-        return !hasForeignKeys(connection, "partidos")
-                || !hasForeignKeys(connection, "gallos")
-                || hasColumn(connection, "gallos", "nombre");
     }
 
     private void ensureEventoColumns(Connection connection) throws SQLException {
@@ -144,13 +138,6 @@ public class DatabaseInitializer {
         }
     }
 
-    private boolean hasForeignKeys(Connection connection, String tableName) throws SQLException {
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("PRAGMA foreign_key_list(" + tableName + ")")) {
-            return resultSet.next();
-        }
-    }
-
     private boolean hasColumn(Connection connection, String tableName, String columnName) throws SQLException {
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery("PRAGMA table_info(" + tableName + ")")) {
@@ -163,49 +150,40 @@ public class DatabaseInitializer {
         return false;
     }
 
-    private void migrateSchema(Connection connection) throws SQLException {
-        boolean previousAutoCommit = connection.getAutoCommit();
-
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("PRAGMA foreign_keys = OFF");
-            connection.setAutoCommit(false);
-
-            statement.execute("ALTER TABLE eventos RENAME TO eventos_old");
-            statement.execute("ALTER TABLE partidos RENAME TO partidos_old");
-            statement.execute("ALTER TABLE gallos RENAME TO gallos_old");
-
-            statement.execute(CREATE_EVENTOS_TABLE);
-            statement.execute(CREATE_PARTIDOS_TABLE);
-            statement.execute(CREATE_GALLOS_TABLE);
-            statement.execute(CREATE_RESTRICCIONES_PARTIDOS_TABLE);
-            statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
-            createCotejoTables(statement);
-
-            statement.execute("INSERT INTO eventos (id, nombre, fecha, modalidad, gallos_por_partido, gallos_obligatorios, ultima_ronda_solo_obligatorios, modo_cotejo, excluir_obligatorios_del_cotejo) " +
-                    "SELECT id, nombre, COALESCE(fecha, ''), COALESCE(modalidad, ''), 0, 0, 0, 'ALEATORIO', 0 FROM eventos_old");
-            statement.execute("INSERT INTO partidos (id, nombre, evento_id) " +
-                    "SELECT p.id, p.nombre, p.evento_id FROM partidos_old p " +
-                    "INNER JOIN eventos e ON e.id = p.evento_id");
-            statement.execute("INSERT INTO gallos (id, peso, anillo, obligatorio, partido_id) " +
-                    "SELECT g.id, g.peso, g.anillo, 0, g.partido_id FROM gallos_old g " +
-                    "INNER JOIN partidos p ON p.id = g.partido_id " +
-                    "WHERE g.peso > 0");
-
-            statement.execute("DROP TABLE gallos_old");
-            statement.execute("DROP TABLE partidos_old");
-            statement.execute("DROP TABLE eventos_old");
-
-            connection.commit();
-            statement.execute("PRAGMA foreign_keys = ON");
-        } catch (SQLException exception) {
-            connection.rollback();
-            throw exception;
-        } finally {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("PRAGMA foreign_keys = ON");
+    private void repairBrokenCotejoSchema(Connection connection, Statement statement) throws SQLException {
+        List<String> tablesToRepair = Arrays.asList("cotejos", "peleas_generadas", "gallos_sin_pelea", "restricciones_partidos");
+        boolean requiresRepair = false;
+        for (String table : tablesToRepair) {
+            if (tableSqlReferencesOldTables(connection, table)) {
+                requiresRepair = true;
+                break;
             }
-            connection.setAutoCommit(previousAutoCommit);
         }
+
+        if (!requiresRepair) {
+            return;
+        }
+
+        statement.execute("DROP TABLE IF EXISTS gallos_sin_pelea");
+        statement.execute("DROP TABLE IF EXISTS peleas_generadas");
+        statement.execute("DROP TABLE IF EXISTS cotejos");
+        statement.execute("DROP TABLE IF EXISTS restricciones_partidos");
+
+        statement.execute(CREATE_RESTRICCIONES_PARTIDOS_TABLE);
+        statement.execute(CREATE_RESTRICCIONES_PARTIDOS_UNIQUE_INDEX);
+        createCotejoTables(statement);
+    }
+
+    private boolean tableSqlReferencesOldTables(Connection connection, String tableName) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(
+                     "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = '" + tableName + "'")) {
+            if (resultSet.next()) {
+                String sql = resultSet.getString(1);
+                return sql != null && (sql.contains("eventos_old") || sql.contains("partidos_old") || sql.contains("gallos_old"));
+            }
+        }
+        return false;
     }
 
     private void createCotejoTables(Statement statement) throws SQLException {

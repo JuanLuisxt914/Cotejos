@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -58,6 +59,18 @@ public class CotejoRepositoryTest {
         assertEquals(1, detalle.getGallosSinPelea().size());
         assertEquals(gallo1.getId(), detalle.getPeleas().get(0).getGallo1Id());
         assertEquals(gallo3.getId(), detalle.getGallosSinPelea().get(0).getGalloId());
+
+        cotejo.setToleranciaGramos(7);
+        cotejo.setPeleas(Arrays.asList(new PeleaGuardada(null, null, 1, gallo1.getId(), gallo3.getId(), 100)));
+        cotejo.setGallosSinPelea(Collections.<GalloSinPeleaGuardado>emptyList());
+        cotejoRepository.actualizar(cotejo);
+
+        CotejoGuardado detalleActualizado = cotejoRepository.cargarDetalle(cotejo.getId());
+        assertNotNull(detalleActualizado);
+        assertEquals(7, detalleActualizado.getToleranciaGramos(), 0.0);
+        assertEquals(1, detalleActualizado.getPeleas().size());
+        assertEquals(gallo3.getId(), detalleActualizado.getPeleas().get(0).getGallo2Id());
+        assertTrue(detalleActualizado.getGallosSinPelea().isEmpty());
 
         cotejoRepository.eliminar(cotejo.getId());
 

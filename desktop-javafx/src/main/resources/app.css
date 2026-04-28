@@ -165,6 +165,56 @@
     -fx-font-weight: 700;
 }
 
+.view-subtitle {
+    -fx-text-fill: #9fb4d1;
+    -fx-font-size: 12px;
+}
+
+.fight-view {
+    -fx-background-insets: 0;
+}
+
+.fight-hero,
+.fight-panel {
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 16;
+}
+
+.fight-hero {
+    -fx-spacing: 8;
+}
+
+.fight-panel-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+}
+
+.fight-panel-note {
+    -fx-font-size: 12px;
+    -fx-opacity: 0.92;
+}
+
+.fight-hero-meta {
+    -fx-padding: 2 0 0 0;
+}
+
+.fight-hero-label {
+    -fx-font-weight: 700;
+}
+
+.fight-hero-value {
+    -fx-font-weight: 700;
+}
+
+.fight-rules-box {
+    -fx-padding: 12 0 0 0;
+}
+
+.fight-detail-grid .label {
+    -fx-font-weight: 600;
+}
+
 .section-title {
     -fx-text-fill: #9fb4d1;
     -fx-font-size: 13px;
@@ -320,4 +370,90 @@
     -fx-border-color: rgba(255, 191, 77, 0.18);
     -fx-border-radius: 0 0 12 12;
     -fx-padding: 12;
+}
+
+.fight-detail-pane {
+    -fx-background-color: rgba(255, 255, 255, 0.84);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(65, 86, 112, 0.14);
+    -fx-border-radius: 16;
+    -fx-padding: 16;
+}
+
+.fight-table {
+    -fx-background-color: rgba(255, 255, 255, 0.92);
+    -fx-control-inner-background: rgba(255, 255, 255, 0.92);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(65, 86, 112, 0.14);
+    -fx-border-radius: 16;
+}
+
+.fight-table .column-header-background {
+    -fx-background-color: linear-gradient(to right, rgba(22, 40, 63, 0.08), rgba(22, 40, 63, 0.02));
+    -fx-background-radius: 16 16 0 0;
+}
+
+.fight-table .column-header,
+.fight-table .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent rgba(65, 86, 112, 0.10) transparent transparent;
+}
+
+.fight-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.fight-table .table-row-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(155, 107, 44, 0.20), rgba(155, 107, 44, 0.08));
+}
+
+.fight-table .table-cell {
+    -fx-text-fill: #233447;
+    -fx-padding: 8 10 8 10;
+    -fx-border-color: transparent rgba(65, 86, 112, 0.08) transparent transparent;
+}
+
+.fight-table .table-row-cell:hover {
+    -fx-background-color: rgba(155, 107, 44, 0.05);
+}
+
+.fight-card {
+    -fx-background-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.96));
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(65, 86, 112, 0.16);
+    -fx-border-radius: 16;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(28, 40, 58, 0.08), 12, 0.18, 0, 2);
+}
+
+.fight-card-title {
+    -fx-text-fill: #192736;
+    -fx-font-size: 17px;
+    -fx-font-weight: 800;
+}
+
+.fight-card-subtitle {
+    -fx-text-fill: #65768b;
+    -fx-font-size: 12px;
+}
+
+.fight-card-line {
+    -fx-text-fill: #243447;
+    -fx-font-size: 13px;
+}
+
+.fight-chip {
+    -fx-background-color: rgba(155, 107, 44, 0.16);
+    -fx-text-fill: #8b5a14;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: rgba(155, 107, 44, 0.22);
+    -fx-padding: 4 10 4 10;
+    -fx-font-weight: 700;
+}
+
+.fight-card .button {
+    -fx-padding: 6 10 6 10;
+    -fx-font-size: 12px;
 }

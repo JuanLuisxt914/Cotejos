@@ -83,6 +83,45 @@
     -fx-font-weight: 700;
 }
 
+.view-subtitle {
+    -fx-text-fill: #535F70;
+    -fx-font-size: 12px;
+}
+
+.fight-hero {
+    -fx-background-color: linear-gradient(to right, rgba(255, 255, 255, 0.96), rgba(244, 247, 250, 0.98));
+    -fx-border-color: rgba(83, 95, 112, 0.14);
+}
+
+.fight-panel {
+    -fx-background-color: rgba(255, 255, 255, 0.88);
+    -fx-border-color: rgba(83, 95, 112, 0.14);
+}
+
+.fight-hero-label {
+    -fx-text-fill: #535F70;
+}
+
+.fight-hero-value {
+    -fx-text-fill: #9b6b2c;
+}
+
+.fight-panel-title {
+    -fx-text-fill: #191c1e;
+}
+
+.fight-panel-note {
+    -fx-text-fill: #535f70;
+}
+
+.fight-rules-box {
+    -fx-background-color: rgba(255, 255, 255, 0.62);
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(83, 95, 112, 0.12);
+    -fx-border-radius: 14;
+    -fx-padding: 12;
+}
+
 .section-title {
     -fx-text-fill: #535F70;
     -fx-font-size: 13px;
@@ -357,4 +396,150 @@
     -fx-border-color: rgba(83, 95, 112, 0.14);
     -fx-border-radius: 0 0 12 12;
     -fx-padding: 12;
+}
+
+.fight-detail-pane {
+    -fx-background-color: rgba(255, 255, 255, 0.88);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(83, 95, 112, 0.14);
+    -fx-border-radius: 16;
+    -fx-padding: 16;
+}
+
+.fight-detail-pane .label {
+    -fx-text-fill: #191C1E;
+}
+
+.fight-detail-pane .grid-pane .label,
+.fight-detail-pane .fight-detail-grid .label {
+    -fx-text-fill: #191C1E;
+}
+
+.fight-detail-pane .fight-panel-title {
+    -fx-text-fill: #191C1E;
+}
+
+.fight-detail-pane .fight-panel-note {
+    -fx-text-fill: #535F70;
+}
+
+.fight-detail-pane .fight-detail-label,
+.fight-detail-pane .fight-detail-value {
+    -fx-text-fill: #191C1E;
+}
+
+.fight-detail-pane .text-field,
+.fight-detail-pane .combo-box-base {
+    -fx-background-color: rgba(255, 255, 255, 0.98);
+    -fx-text-fill: #42474E;
+    -fx-prompt-text-fill: #535F70;
+    -fx-border-color: rgba(83, 95, 112, 0.18);
+}
+
+.fight-detail-pane .fight-detail-combo .list-cell,
+.fight-detail-pane .fight-detail-combo .list-cell .text {
+    -fx-text-fill: #191C1E;
+}
+
+.fight-table {
+    -fx-background-color: rgba(255, 255, 255, 0.96);
+    -fx-control-inner-background: rgba(255, 255, 255, 0.96);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(83, 95, 112, 0.16);
+    -fx-border-radius: 16;
+}
+
+.fight-table .column-header-background {
+    -fx-background-color: linear-gradient(to right, rgba(255, 255, 255, 0.98), rgba(238, 243, 247, 0.98));
+    -fx-background-radius: 16 16 0 0;
+}
+
+.fight-table .column-header,
+.fight-table .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent rgba(83, 95, 112, 0.10) transparent transparent;
+}
+
+.fight-table .label {
+    -fx-text-fill: #191C1E;
+}
+
+.fight-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.fight-table .table-row-cell:hover {
+    -fx-background-color: rgba(0, 97, 164, 0.05);
+}
+
+.fight-table .table-row-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(0, 97, 164, 0.14), rgba(0, 97, 164, 0.06));
+}
+
+.fight-table .table-row-cell:drag-active {
+    -fx-background-color: linear-gradient(to right, rgba(0, 97, 164, 0.20), rgba(0, 97, 164, 0.08));
+    -fx-effect: dropshadow(gaussian, rgba(83, 95, 112, 0.18), 18, 0.22, 0, 4);
+}
+
+.fight-table .table-row-cell:drop-top {
+    -fx-border-color: rgba(0, 97, 164, 0.88) transparent transparent transparent;
+    -fx-border-width: 3 0 0 0;
+    -fx-background-color: rgba(0, 97, 164, 0.05);
+}
+
+.fight-table .table-row-cell:drop-bottom {
+    -fx-border-color: transparent transparent rgba(0, 97, 164, 0.88) transparent;
+    -fx-border-width: 0 0 3 0;
+    -fx-background-color: rgba(0, 97, 164, 0.05);
+}
+
+.fight-table .table-cell {
+    -fx-text-fill: #2D3135;
+    -fx-padding: 8 10 8 10;
+    -fx-border-color: transparent rgba(83, 95, 112, 0.08) transparent transparent;
+}
+
+.fight-table .table-column {
+    -fx-alignment: CENTER_LEFT;
+}
+
+.fight-card {
+    -fx-background-color: linear-gradient(to bottom, #FFFFFF, #FAFBFC);
+    -fx-border-color: rgba(83, 95, 112, 0.16);
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(83, 95, 112, 0.10), 10, 0.18, 0, 2);
+}
+
+.fight-card-title {
+    -fx-text-fill: #191C1E;
+    -fx-font-size: 17px;
+    -fx-font-weight: 800;
+}
+
+.fight-card-subtitle {
+    -fx-text-fill: #535F70;
+    -fx-font-size: 12px;
+}
+
+.fight-card-line {
+    -fx-text-fill: #2D3135;
+    -fx-font-size: 13px;
+}
+
+.fight-chip {
+    -fx-background-color: rgba(0, 97, 164, 0.10);
+    -fx-text-fill: #00518B;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: rgba(0, 97, 164, 0.20);
+    -fx-padding: 4 10 4 10;
+    -fx-font-weight: 700;
+}
+
+.fight-card .button {
+    -fx-padding: 6 10 6 10;
+    -fx-font-size: 12px;
 }

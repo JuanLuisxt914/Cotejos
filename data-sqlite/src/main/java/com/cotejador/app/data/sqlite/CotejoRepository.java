@@ -20,6 +20,8 @@ public class CotejoRepository {
                     "(cotejo_id, orden, gallo_1_id, gallo_2_id, diferencia_peso) VALUES (?, ?, ?, ?, ?)";
     private static final String INSERT_GALLO_SIN_PELEA =
             "INSERT INTO gallos_sin_pelea (cotejo_id, gallo_id) VALUES (?, ?)";
+    private static final String UPDATE_COTEJO =
+            "UPDATE cotejos SET evento_id = ?, tolerancia_gramos = ?, fecha_generacion = ? WHERE id = ?";
     private static final String SELECT_COTEJOS_BY_EVENTO =
             "SELECT id, evento_id, tolerancia_gramos, fecha_generacion " +
                     "FROM cotejos WHERE evento_id = ? ORDER BY id DESC";
@@ -46,6 +48,30 @@ public class CotejoRepository {
 
             try {
                 insertarCotejo(connection, cotejo);
+                insertarPeleas(connection, cotejo);
+                insertarGallosSinPelea(connection, cotejo);
+                connection.commit();
+            } catch (SQLException exception) {
+                connection.rollback();
+                throw exception;
+            } finally {
+                connection.setAutoCommit(previousAutoCommit);
+            }
+        }
+    }
+
+    public void actualizar(CotejoGuardado cotejo) throws SQLException {
+        if (cotejo.getId() == null) {
+            throw new IllegalArgumentException("El cotejo debe tener un id para actualizarse.");
+        }
+
+        try (Connection connection = connectionFactory.getConnection()) {
+            boolean previousAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+
+            try {
+                actualizarCotejo(connection, cotejo);
+                borrarDetalle(connection, cotejo.getId());
                 insertarPeleas(connection, cotejo);
                 insertarGallosSinPelea(connection, cotejo);
                 connection.commit();
@@ -101,6 +127,29 @@ public class CotejoRepository {
         try (Connection connection = connectionFactory.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_COTEJO)) {
             statement.setLong(1, id);
+            statement.executeUpdate();
+        }
+    }
+
+    private void actualizarCotejo(Connection connection, CotejoGuardado cotejo) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(UPDATE_COTEJO)) {
+            statement.setLong(1, cotejo.getEventoId());
+            statement.setDouble(2, cotejo.getToleranciaGramos());
+            statement.setString(3, cotejo.getFechaGeneracion());
+            statement.setLong(4, cotejo.getId());
+            statement.executeUpdate();
+        }
+    }
+
+    private void borrarDetalle(Connection connection, Long cotejoId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM peleas_generadas WHERE cotejo_id = ?")) {
+            statement.setLong(1, cotejoId);
+            statement.executeUpdate();
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM gallos_sin_pelea WHERE cotejo_id = ?")) {
+            statement.setLong(1, cotejoId);
             statement.executeUpdate();
         }
     }

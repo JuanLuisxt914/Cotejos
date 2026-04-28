@@ -23,7 +23,7 @@ public class MainApp extends Application {
 
         Scene scene = new Scene(root, 800, 680);
         scene.getStylesheets().add(getClass().getResource("/app.css").toExternalForm());
-        scene.getStylesheets().add(getClass().getResource("/theme-light.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/theme-dark.css").toExternalForm());
 
         primaryStage.setTitle("Cotejador");
         primaryStage.setScene(scene);

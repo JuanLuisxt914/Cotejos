@@ -106,7 +106,7 @@ public class ShellController {
     private CotejoRepository cotejoRepository;
     private PdfCotejoService pdfCotejoService;
     private RestriccionPartidoRepository restriccionPartidoRepository;
-    private Theme currentTheme = Theme.LIGHT;
+    private Theme currentTheme = Theme.DARK;
     private Evento currentEvento;
     private boolean drawerOpen;
     private WindowMode currentWindowMode = WindowMode.EVENTOS;
@@ -135,6 +135,10 @@ public class ShellController {
     public void setPrimaryStage(javafx.stage.Stage primaryStage) {
         this.primaryStage = primaryStage;
         applyWindowMode();
+    }
+
+    public boolean isDarkThemeActive() {
+        return currentTheme == Theme.DARK;
     }
 
     private void cargarVistasHijas() {
@@ -190,17 +194,30 @@ public class ShellController {
                 eventoInfoVisible(true);
                 drawerOpen = false;
                 setDrawerVisible(false);
-                registroController.onEventoCambio(evento);
-                peleasController.onEventoCambio(evento);
-                updateEventInfo(evento, peleasController.getModoCotejoSeleccionado());
+                if (registroController != null) {
+                    registroController.onEventoCambio(evento);
+                }
+                ModoCotejo modoCotejo = ModoCotejo.ALEATORIO;
+                if (peleasController != null) {
+                    peleasController.onEventoCambio(evento);
+                    ModoCotejo modoSeleccionado = peleasController.getModoCotejoSeleccionado();
+                    if (modoSeleccionado != null) {
+                        modoCotejo = modoSeleccionado;
+                    }
+                }
+                updateEventInfo(evento, modoCotejo);
                 mostrarVistaRegistro();
             } catch (Exception e) {
                 setStatus("Error al actualizar vistas: " + e.getMessage());
                 e.printStackTrace();
             }
         } else {
-            registroController.limpiar();
-            peleasController.limpiar();
+            if (registroController != null) {
+                registroController.limpiar();
+            }
+            if (peleasController != null) {
+                peleasController.limpiar();
+            }
             updateEventInfo(null, ModoCotejo.ALEATORIO);
             setDrawerVisible(false);
             mostrarVistaEventos();
@@ -335,6 +352,10 @@ public class ShellController {
         scene.getStylesheets().removeIf(stylesheet ->
                 stylesheet.endsWith("/theme-dark.css") || stylesheet.endsWith("/theme-light.css"));
         scene.getStylesheets().add(themeStylesheet);
+
+        if (peleasController != null) {
+            peleasController.aplicarTemaDetallePelea();
+        }
     }
 
     private void refreshThemeToggleText() {
