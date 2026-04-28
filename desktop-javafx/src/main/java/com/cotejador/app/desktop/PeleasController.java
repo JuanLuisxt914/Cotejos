@@ -61,6 +61,7 @@ import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
 import javafx.css.PseudoClass;
 import javafx.util.Duration;
@@ -68,6 +69,7 @@ import javafx.util.Duration;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,6 +79,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class PeleasController {
+    private static final DateTimeFormatter COTEJO_FECHA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final PseudoClass DROP_TOP = PseudoClass.getPseudoClass("drop-top");
     private static final PseudoClass DROP_BOTTOM = PseudoClass.getPseudoClass("drop-bottom");
     private static final PseudoClass DRAG_ACTIVE = PseudoClass.getPseudoClass("drag-active");
@@ -108,12 +111,11 @@ public class PeleasController {
     private final ObservableList<Gallo> gallosEvento = FXCollections.observableArrayList();
     private final ObservableList<RestriccionPartido> restricciones = FXCollections.observableArrayList();
     private final ObservableList<CotejoGuardado> cotejosGuardados = FXCollections.observableArrayList();
-    private final ObservableList<PeleaGuardada> peleasGuardadas = FXCollections.observableArrayList();
-    private final ObservableList<GalloSinPeleaGuardado> gallosSinPeleaGuardados = FXCollections.observableArrayList();
     private final ObjectProperty<Pelea> peleaSeleccionada = new SimpleObjectProperty<>();
     private final Map<Long, String> nombresPartidosEvento = new HashMap<>();
     private final Map<Long, Integer> rondaPorGalloId = new HashMap<>();
     private CotejoGuardado cotejoEditableActual;
+    private CotejoGuardado cotejoImpresionActual;
 
     @FXML
     private Spinner<Double> toleranciaSpinner;
@@ -216,11 +218,21 @@ public class PeleasController {
     @FXML
     private ListView<RestriccionPartido> restriccionList;
     @FXML
-    private ListView<CotejoGuardado> cotejoGuardadoList;
+    private TableView<CotejoGuardado> cotejoGuardadoTable;
     @FXML
-    private ListView<PeleaGuardada> peleaGuardadaList;
+    private TableColumn<CotejoGuardado, Number> cotejoIdColumn;
     @FXML
-    private ListView<GalloSinPeleaGuardado> galloSinPeleaGuardadoList;
+    private TableColumn<CotejoGuardado, String> cotejoFechaColumn;
+    @FXML
+    private TableColumn<CotejoGuardado, String> cotejoToleranciaColumn;
+    @FXML
+    private Button guardarCotejoButton;
+    @FXML
+    private Button guardarImprimirButton;
+    @FXML
+    private HBox opcionesImpresionPane;
+    @FXML
+    private Label opcionesImpresionTituloLabel;
     @FXML
     private Button peleaAplicarButton;
     @FXML
@@ -249,8 +261,8 @@ public class PeleasController {
         initializeToleranciaSpinner();
         initializePeleasTable();
         initializeDetallePelea();
-        configureSelectionListeners();
         bindListViews();
+        configureCotejosGuardadosList();
         expandirGallosSinPelea();
         aplicarProporcionSplitPane();
     }
@@ -284,9 +296,26 @@ public class PeleasController {
         }
         configurarTablaGallosSinPelea();
         restriccionList.setItems(restricciones);
-        cotejoGuardadoList.setItems(cotejosGuardados);
-        peleaGuardadaList.setItems(peleasGuardadas);
-        galloSinPeleaGuardadoList.setItems(gallosSinPeleaGuardados);
+        if (cotejoGuardadoTable != null) {
+            cotejoGuardadoTable.setItems(cotejosGuardados);
+            cotejoGuardadoTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        }
+        if (cotejoIdColumn != null) {
+            cotejoIdColumn.setCellValueFactory(cellData ->
+                    new ReadOnlyObjectWrapper<>(cellData.getValue() == null ? null : cellData.getValue().getId()));
+        }
+        if (cotejoFechaColumn != null) {
+            cotejoFechaColumn.setCellValueFactory(cellData ->
+                    new ReadOnlyStringWrapper(cellData.getValue() == null
+                            ? ""
+                            : formatearFechaCotejo(cellData.getValue().getFechaGeneracion())));
+        }
+        if (cotejoToleranciaColumn != null) {
+            cotejoToleranciaColumn.setCellValueFactory(cellData ->
+                    new ReadOnlyStringWrapper(cellData.getValue() == null
+                            ? ""
+                            : formatearPeso(cellData.getValue().getToleranciaGramos()) + " g"));
+        }
     }
 
     private void configurarTablaGallosSinPelea() {
@@ -495,11 +524,15 @@ public class PeleasController {
         return column == null ? 0.0 : Math.max(0.0, column.getWidth());
     }
 
-    private void configureSelectionListeners() {
-        cotejoGuardadoList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, selectedCotejo) -> {
-            if (selectedCotejo != null) {
-                verCotejoGuardado();
+    private void configureCotejosGuardadosList() {
+        if (cotejoGuardadoTable == null) {
+            return;
+        }
+        cotejoGuardadoTable.setOnMouseClicked(event -> {
+            if (event.getButton() != MouseButton.PRIMARY || event.getClickCount() < 2) {
+                return;
             }
+            cargarCotejoSeleccionadoEnTablaPrincipal();
         });
     }
 
@@ -540,12 +573,11 @@ public class PeleasController {
         gallosSinPelea.clear();
         restricciones.clear();
         cotejosGuardados.clear();
-        peleasGuardadas.clear();
-        gallosSinPeleaGuardados.clear();
         gallosEvento.clear();
         nombresPartidosEvento.clear();
         rondaPorGalloId.clear();
         cotejoEditableActual = null;
+        cotejoImpresionActual = null;
         peleaSeleccionada.set(null);
         if (partidosPrioritariosField != null) {
             partidosPrioritariosField.clear();
@@ -570,20 +602,15 @@ public class PeleasController {
         if (restriccionPartidoDestinoCombo != null) {
             restriccionPartidoDestinoCombo.getSelectionModel().clearSelection();
         }
-        if (cotejoGuardadoList != null) {
-            cotejoGuardadoList.getSelectionModel().clearSelection();
-        }
-        if (peleaGuardadaList != null) {
-            peleaGuardadaList.getSelectionModel().clearSelection();
-        }
-        if (galloSinPeleaGuardadoList != null) {
-            galloSinPeleaGuardadoList.getSelectionModel().clearSelection();
+        if (cotejoGuardadoTable != null) {
+            cotejoGuardadoTable.getSelectionModel().clearSelection();
         }
         expandirGallosSinPelea();
         if (peleasCotejoTable != null) {
             peleasCotejoTable.getSelectionModel().clearSelection();
         }
         ocultarDetallePelea();
+        cerrarPanelOpcionesImpresion();
     }
 
     private PartidoRepository getPartidoRepository() {
@@ -635,8 +662,6 @@ public class PeleasController {
 
     private void loadCotejosGuardados(Long eventoId) throws Exception {
         cotejosGuardados.setAll(cotejoRepository.listarPorEvento(eventoId));
-        peleasGuardadas.clear();
-        gallosSinPeleaGuardados.clear();
     }
 
     @FXML
@@ -665,24 +690,55 @@ public class PeleasController {
             peleasCotejo.setAll(peleasOrdenadas);
             gallosSinPelea.setAll(resultado.getGallosSinPelea());
 
-            CotejoGuardado cotejoGuardado = guardarCotejo(
-                    eventoActual,
-                    toleranciaFromParametros(parametros),
-                    peleasOrdenadas,
-                    resultado.getGallosSinPelea());
-            cotejoEditableActual = cotejoGuardado;
+            cotejoEditableActual = null;
             if (peleasCotejoTable != null) {
                 peleasCotejoTable.getSelectionModel().clearSelection();
             }
             ocultarDetallePelea();
 
-            loadCotejosGuardados(eventoActual.getId());
-            selectCotejoById(cotejoGuardado.getId());
-
             shellController.setStatus("Cotejo generado: " + resultado.getPeleas().size() +
                     " peleas, " + resultado.getGallosSinPelea().size() + " gallos sin pelea.");
         } catch (Exception e) {
             shellController.showError("Error al cotejar evento", e);
+        }
+    }
+
+    @FXML
+    private void guardarCotejoActual() {
+        if (eventoActual == null) {
+            shellController.setStatus("Selecciona un evento antes de guardar.");
+            return;
+        }
+        if (peleasCotejo.isEmpty() && gallosSinPelea.isEmpty()) {
+            shellController.setStatus("No hay cotejo generado para guardar.");
+            return;
+        }
+
+        try {
+            guardarOCrearCotejoActual();
+            shellController.setStatus("Cotejo guardado.");
+        } catch (Exception e) {
+            shellController.showError("Error al guardar cotejo", e);
+        }
+    }
+
+    @FXML
+    private void guardarEImprimirDesdePeleas() {
+        if (eventoActual == null) {
+            shellController.setStatus("Selecciona un evento antes de guardar e imprimir.");
+            return;
+        }
+        if (peleasCotejo.isEmpty() && gallosSinPelea.isEmpty()) {
+            shellController.setStatus("No hay cotejo generado para guardar e imprimir.");
+            return;
+        }
+
+        try {
+            CotejoGuardado cotejo = guardarOCrearCotejoActual();
+            mostrarPanelOpcionesImpresion(cotejo);
+            shellController.setStatus("Cotejo guardado. Selecciona una opcion de impresion.");
+        } catch (Exception e) {
+            shellController.showError("Error al guardar e imprimir", e);
         }
     }
 
@@ -822,6 +878,30 @@ public class PeleasController {
         cotejo.setGallosSinPelea(toGallosSinPeleaGuardados(gallosSinPeleaResultado));
         cotejoRepository.guardar(cotejo);
         return cotejo;
+    }
+
+    private CotejoGuardado guardarOCrearCotejoActual() throws Exception {
+        Double tolerancia = readTolerancia();
+        double toleranciaFinal = tolerancia == null ? DEFAULT_TOLERANCIA : tolerancia;
+        if (cotejoEditableActual != null && cotejoEditableActual.getId() != null) {
+            cotejoEditableActual.setToleranciaGramos(toleranciaFinal);
+            cotejoEditableActual.setPeleas(toPeleasGuardadas(peleasCotejo));
+            cotejoEditableActual.setGallosSinPelea(toGallosSinPeleaGuardados(gallosSinPelea));
+            cotejoRepository.actualizar(cotejoEditableActual);
+            loadCotejosGuardados(eventoActual.getId());
+            selectCotejoById(cotejoEditableActual.getId());
+            return cotejoEditableActual;
+        }
+
+        CotejoGuardado cotejoGuardado = guardarCotejo(
+                eventoActual,
+                toleranciaFinal,
+                new ArrayList<>(peleasCotejo),
+                new ArrayList<>(gallosSinPelea));
+        cotejoEditableActual = cotejoGuardado;
+        loadCotejosGuardados(eventoActual.getId());
+        selectCotejoById(cotejoGuardado.getId());
+        return cotejoGuardado;
     }
 
     private List<PeleaGuardada> toPeleasGuardadas(List<Pelea> peleas) {
@@ -1252,7 +1332,7 @@ public class PeleasController {
 
     private void persistirCotejoEditable(String mensajeExito) {
         if (cotejoEditableActual == null || eventoActual == null) {
-            shellController.setStatus(mensajeExito);
+            shellController.setStatus(mensajeExito + " Cambios en memoria; usa Guardar cotejo para persistir.");
             return;
         }
 
@@ -1618,9 +1698,8 @@ public class PeleasController {
         persistirCotejoEditable("Orden de pelea actualizado.");
     }
 
-    @FXML
-    private void verCotejoGuardado() {
-        CotejoGuardado selectedCotejo = cotejoGuardadoList.getSelectionModel().getSelectedItem();
+    private void cargarCotejoSeleccionadoEnTablaPrincipal() {
+        CotejoGuardado selectedCotejo = getCotejoSeleccionado();
         if (selectedCotejo == null) {
             shellController.setStatus("Selecciona un cotejo guardado.");
             return;
@@ -1633,17 +1712,63 @@ public class PeleasController {
                 return;
             }
 
-            peleasGuardadas.setAll(detalle.getPeleas());
-            gallosSinPeleaGuardados.setAll(detalle.getGallosSinPelea());
-            shellController.setStatus("Cotejo guardado cargado.");
+            List<Pelea> peleasCargadas = toPeleasDesdeGuardado(detalle.getPeleas());
+            List<Gallo> gallosSinPeleaCargados = toGallosSinPeleaDesdeGuardado(detalle.getGallosSinPelea());
+            peleasCotejo.setAll(peleasCargadas);
+            gallosSinPelea.setAll(gallosSinPeleaCargados);
+            cotejoEditableActual = detalle;
+            if (toleranciaSpinner != null) {
+                toleranciaSpinner.getValueFactory().setValue(detalle.getToleranciaGramos());
+            }
+            if (peleasCotejoTable != null) {
+                peleasCotejoTable.getSelectionModel().clearSelection();
+            }
+            ocultarDetallePelea();
+            shellController.setStatus("Cotejo guardado cargado en la tabla principal.");
         } catch (Exception e) {
             shellController.showError("Error al cargar cotejo guardado", e);
         }
     }
 
+    private List<Pelea> toPeleasDesdeGuardado(List<PeleaGuardada> peleasGuardadas) throws Exception {
+        List<Pelea> peleas = new ArrayList<>();
+        if (peleasGuardadas == null) {
+            return peleas;
+        }
+        for (PeleaGuardada peleaGuardada : peleasGuardadas) {
+            if (peleaGuardada == null) {
+                continue;
+            }
+            Gallo gallo1 = galloRepository.buscarPorId(peleaGuardada.getGallo1Id());
+            Gallo gallo2 = galloRepository.buscarPorId(peleaGuardada.getGallo2Id());
+            if (gallo1 == null || gallo2 == null) {
+                throw new IllegalStateException("No se pudo reconstruir una pelea guardada por datos faltantes.");
+            }
+            peleas.add(new Pelea(gallo1, gallo2, peleaGuardada.getDiferenciaPeso()));
+        }
+        return peleas;
+    }
+
+    private List<Gallo> toGallosSinPeleaDesdeGuardado(List<GalloSinPeleaGuardado> guardados) throws Exception {
+        List<Gallo> gallos = new ArrayList<>();
+        if (guardados == null) {
+            return gallos;
+        }
+        for (GalloSinPeleaGuardado guardado : guardados) {
+            if (guardado == null) {
+                continue;
+            }
+            Gallo gallo = galloRepository.buscarPorId(guardado.getGalloId());
+            if (gallo != null) {
+                gallos.add(gallo);
+            }
+        }
+        return gallos;
+    }
+
     @FXML
     private void exportarPdfCotejoGuardado() {
-        CotejoGuardado selectedCotejo = cotejoGuardadoList.getSelectionModel().getSelectedItem();
+        CotejoGuardado selectedCotejo = getCotejoSeleccionado();
         if (selectedCotejo == null) {
             shellController.setStatus("Selecciona un cotejo guardado para exportar.");
             return;
@@ -1655,7 +1780,7 @@ public class PeleasController {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF", "*.pdf"));
             fileChooser.setInitialFileName("cotejo-" + selectedCotejo.getId() + ".pdf");
 
-            Stage stage = (Stage) cotejoGuardadoList.getScene().getWindow();
+            Stage stage = (Stage) cotejoGuardadoTable.getScene().getWindow();
 
             File selectedFile = fileChooser.showSaveDialog(stage);
             if (selectedFile == null) {
@@ -1672,8 +1797,19 @@ public class PeleasController {
     }
 
     @FXML
+    private void imprimirCotejoGuardado() {
+        CotejoGuardado selectedCotejo = getCotejoSeleccionado();
+        if (selectedCotejo == null) {
+            shellController.setStatus("Selecciona un cotejo guardado para imprimir.");
+            return;
+        }
+        mostrarPanelOpcionesImpresion(selectedCotejo);
+        shellController.setStatus("Selecciona una opcion de impresion.");
+    }
+
+    @FXML
     private void eliminarCotejoGuardado() {
-        CotejoGuardado selectedCotejo = cotejoGuardadoList.getSelectionModel().getSelectedItem();
+        CotejoGuardado selectedCotejo = getCotejoSeleccionado();
         if (selectedCotejo == null) {
             shellController.setStatus("Selecciona un cotejo guardado para eliminar.");
             return;
@@ -1684,8 +1820,6 @@ public class PeleasController {
             if (eventoActual != null) {
                 loadCotejosGuardados(eventoActual.getId());
             }
-            peleasGuardadas.clear();
-            gallosSinPeleaGuardados.clear();
             shellController.setStatus("Cotejo guardado eliminado.");
         } catch (Exception e) {
             shellController.showError("Error al eliminar cotejo guardado", e);
@@ -1794,14 +1928,93 @@ public class PeleasController {
     }
 
     private void selectCotejoById(Long id) {
-        if (id == null || cotejoGuardadoList == null) {
+        if (id == null || cotejoGuardadoTable == null) {
             return;
         }
         for (CotejoGuardado cotejo : cotejosGuardados) {
             if (id.equals(cotejo.getId())) {
-                cotejoGuardadoList.getSelectionModel().select(cotejo);
+                cotejoGuardadoTable.getSelectionModel().select(cotejo);
                 return;
             }
+        }
+    }
+
+    private CotejoGuardado getCotejoSeleccionado() {
+        if (cotejoGuardadoTable == null) {
+            return null;
+        }
+        return cotejoGuardadoTable.getSelectionModel().getSelectedItem();
+    }
+
+    private void mostrarPanelOpcionesImpresion(CotejoGuardado cotejo) {
+        cotejoImpresionActual = cotejo;
+        if (opcionesImpresionTituloLabel != null && cotejo != null && cotejo.getId() != null) {
+            opcionesImpresionTituloLabel.setText("Imprimir cotejo #" + cotejo.getId() + ":");
+        }
+        if (opcionesImpresionPane != null) {
+            opcionesImpresionPane.setVisible(true);
+            opcionesImpresionPane.setManaged(true);
+        }
+    }
+
+    @FXML
+    private void cerrarPanelOpcionesImpresion() {
+        if (opcionesImpresionPane != null) {
+            opcionesImpresionPane.setVisible(false);
+            opcionesImpresionPane.setManaged(false);
+        }
+        cotejoImpresionActual = null;
+    }
+
+    @FXML
+    private void imprimirHojaPublico() {
+        if (!validarCotejoParaImpresion()) {
+            return;
+        }
+        shellController.setStatus("Pendiente: imprimir hoja para publico del cotejo #" + cotejoImpresionActual.getId());
+    }
+
+    @FXML
+    private void imprimirHojaJuez() {
+        if (!validarCotejoParaImpresion()) {
+            return;
+        }
+        shellController.setStatus("Pendiente: imprimir hoja para juez del cotejo #" + cotejoImpresionActual.getId());
+    }
+
+    @FXML
+    private void imprimirScore() {
+        if (!validarCotejoParaImpresion()) {
+            return;
+        }
+        shellController.setStatus("Pendiente: imprimir score del cotejo #" + cotejoImpresionActual.getId());
+    }
+
+    @FXML
+    private void imprimirListaPartidos() {
+        if (!validarCotejoParaImpresion()) {
+            return;
+        }
+        shellController.setStatus("Pendiente: imprimir lista de partidos del cotejo #" + cotejoImpresionActual.getId());
+    }
+
+    private boolean validarCotejoParaImpresion() {
+        if (cotejoImpresionActual == null || cotejoImpresionActual.getId() == null) {
+            shellController.setStatus("Primero selecciona o guarda un cotejo para imprimir.");
+            return false;
+        }
+        return true;
+    }
+
+    private String formatearFechaCotejo(String fechaGeneracion) {
+        if (fechaGeneracion == null || fechaGeneracion.trim().isEmpty()) {
+            return "-";
+        }
+        try {
+            LocalDateTime fecha = LocalDateTime.parse(fechaGeneracion.trim());
+            return fecha.format(COTEJO_FECHA_FORMATTER);
+        } catch (Exception e) {
+            return fechaGeneracion;
         }
     }
 

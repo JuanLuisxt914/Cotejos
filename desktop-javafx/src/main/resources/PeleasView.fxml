@@ -16,6 +16,8 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.VBox?>
 
@@ -156,38 +158,72 @@
 
                                 <TitledPane fx:id="cotejosGuardadosPane" text="Cotejos guardados" expanded="false">
                                     <content>
-                                        <VBox spacing="8">
+                                        <VBox spacing="8" prefHeight="260.0">
                                             <Label text="Archivo de cotejos" styleClass="fight-panel-note"/>
-                                            <ListView fx:id="cotejoGuardadoList"
-                                                      prefHeight="140.0"
-                                                      accessibleText="Lista de cotejos guardados"/>
+                                            <TableView fx:id="cotejoGuardadoTable"
+                                                       VBox.vgrow="ALWAYS"
+                                                       maxWidth="Infinity"
+                                                       styleClass="fight-table"
+                                                       accessibleText="Tabla de cotejos guardados">
+                                                <columns>
+                                                    <TableColumn fx:id="cotejoIdColumn" text="ID" prefWidth="56.0" minWidth="56.0" maxWidth="72.0"/>
+                                                    <TableColumn fx:id="cotejoFechaColumn" text="Fecha" prefWidth="170.0" minWidth="120.0"/>
+                                                    <TableColumn fx:id="cotejoToleranciaColumn" text="Tolerancia" prefWidth="88.0" minWidth="88.0" maxWidth="120.0"/>
+                                                </columns>
+                                            </TableView>
+                                            <Label text="Doble clic en un cotejo para verlo en la tabla de peleas."
+                                                   styleClass="fight-panel-note"
+                                                   wrapText="true"/>
 
-                                            <HBox spacing="6">
-                                                <Button text="Ver cotejo"
-                                                        onAction="#verCotejoGuardado"
-                                                        fx:id="verCotejoGuardadoButton"
-                                                        accessibleText="Ver detalle del cotejo guardado seleccionado"/>
-                                                <Button text="Exportar PDF"
-                                                        onAction="#exportarPdfCotejoGuardado"
+                                            <GridPane hgap="6" vgap="0">
+                                                <columnConstraints>
+                                                    <ColumnConstraints percentWidth="50"/>
+                                                    <ColumnConstraints percentWidth="50"/>
+                                                </columnConstraints>
+                                                <Button text="Guardar cotejo"
+                                                        onAction="#guardarCotejoActual"
                                                         styleClass="primary-action"
-                                                        fx:id="exportarPdfButton"
-                                                        accessibleText="Exportar el cotejo guardado a PDF"/>
+                                                        fx:id="guardarCotejoButton"
+                                                        prefWidth="0.0"
+                                                        maxWidth="Infinity"
+                                                        GridPane.columnIndex="0"
+                                                        GridPane.hgrow="ALWAYS"
+                                                        accessibleText="Guardar el cotejo actual"/>
                                                 <Button text="Eliminar cotejo"
                                                         onAction="#eliminarCotejoGuardado"
                                                         styleClass="danger-action"
                                                         fx:id="eliminarCotejoGuardadoButton"
+                                                        prefWidth="0.0"
+                                                        maxWidth="Infinity"
+                                                        GridPane.columnIndex="1"
+                                                        GridPane.hgrow="ALWAYS"
                                                         accessibleText="Eliminar el cotejo guardado seleccionado"/>
-                                            </HBox>
+                                            </GridPane>
+                                            <GridPane hgap="6" vgap="0">
+                                                <columnConstraints>
+                                                    <ColumnConstraints percentWidth="50"/>
+                                                    <ColumnConstraints percentWidth="50"/>
+                                                </columnConstraints>
+                                                <Button text="Exportar PDF"
+                                                        onAction="#exportarPdfCotejoGuardado"
+                                                        styleClass="primary-action"
+                                                        fx:id="exportarPdfButton"
+                                                        prefWidth="0.0"
+                                                        maxWidth="Infinity"
+                                                        GridPane.columnIndex="0"
+                                                        GridPane.hgrow="ALWAYS"
+                                                        accessibleText="Exportar el cotejo guardado a PDF"/>
+                                                <Button text="Imprimir"
+                                                        onAction="#imprimirCotejoGuardado"
+                                                        styleClass="secondary-action"
+                                                        fx:id="imprimirCotejoGuardadoButton"
+                                                        prefWidth="0.0"
+                                                        maxWidth="Infinity"
+                                                        GridPane.columnIndex="1"
+                                                        GridPane.hgrow="ALWAYS"
+                                                        accessibleText="Imprimir el cotejo guardado seleccionado"/>
+                                            </GridPane>
 
-                                            <Label text="Peleas guardadas" styleClass="section-title"/>
-                                            <ListView fx:id="peleaGuardadaList"
-                                                      prefHeight="120.0"
-                                                      accessibleText="Lista de peleas guardadas"/>
-
-                                            <Label text="Gallos sin pelea guardados" styleClass="section-title"/>
-                                            <ListView fx:id="galloSinPeleaGuardadoList"
-                                                      prefHeight="120.0"
-                                                      accessibleText="Lista de gallos sin pelea guardados"/>
                                         </VBox>
                                     </content>
                                 </TitledPane>
@@ -207,6 +243,45 @@
                                        styleClass="fight-panel-note"
                                        wrapText="true"/>
                             </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="Guardar e imprimir"
+                                    fx:id="guardarImprimirButton"
+                                    onAction="#guardarEImprimirDesdePeleas"
+                                    styleClass="primary-action"
+                                    accessibleText="Guardar el cotejo actual y abrir opciones de impresion"/>
+                        </HBox>
+
+                        <HBox fx:id="opcionesImpresionPane"
+                              spacing="6"
+                              alignment="CENTER_LEFT"
+                              visible="false"
+                              managed="false"
+                              styleClass="fight-panel"
+                              style="-fx-padding: 6 8;">
+                            <Label fx:id="opcionesImpresionTituloLabel"
+                                   text="Imprimir:"
+                                   styleClass="fight-panel-note"/>
+                            <Button text="Publico"
+                                    onAction="#imprimirHojaPublico"
+                                    styleClass="primary-action"
+                                    style="-fx-padding: 8 16;"/>
+                            <Button text="Juez"
+                                    onAction="#imprimirHojaJuez"
+                                    styleClass="primary-action"
+                                    style="-fx-padding: 8 16;"/>
+                            <Button text="Score"
+                                    onAction="#imprimirScore"
+                                    styleClass="primary-action"
+                                    style="-fx-padding: 8 16;"/>
+                            <Button text="Partidos"
+                                    onAction="#imprimirListaPartidos"
+                                    styleClass="primary-action"
+                                    style="-fx-padding: 8 16;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="✕"
+                                    onAction="#cerrarPanelOpcionesImpresion"
+                                    styleClass="secondary-action"
+                                    style="-fx-padding: 2 8; -fx-font-size: 11px;"/>
                         </HBox>
 
                         <TableView fx:id="peleasCotejoTable"
