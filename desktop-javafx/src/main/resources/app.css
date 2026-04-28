@@ -21,6 +21,35 @@
     -fx-padding: 8 12 8 12;
 }
 
+.top-nav-bar {
+    -fx-alignment: center-left;
+    -fx-padding: 2 0 0 0;
+}
+
+.top-nav-bar .button {
+    -fx-min-height: 34px;
+    -fx-padding: 6 14 6 14;
+    -fx-font-size: 19px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-font-weight: 800;
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 2 0;
+}
+
+.top-nav-bar .button.active-view {
+    -fx-background-color: rgba(155, 107, 44, 0.10);
+    -fx-text-fill: #191C1E;
+    -fx-border-color: rgba(155, 107, 44, 0.65);
+}
+
+.event-info-inline {
+    -fx-alignment: center-right;
+    -fx-padding: 0 0 0 18;
+}
+
 .drawer-panel {
     -fx-background-color: linear-gradient(to bottom, rgba(15, 22, 33, 0.98), rgba(22, 34, 50, 0.98));
     -fx-border-color: rgba(255, 188, 74, 0.18);
@@ -456,4 +485,9 @@
 .fight-card .button {
     -fx-padding: 6 10 6 10;
     -fx-font-size: 12px;
+}
+
+.fight-action-button {
+    -fx-content-display: graphic-only;
+    -fx-alignment: CENTER;
 }

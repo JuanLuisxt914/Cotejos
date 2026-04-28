@@ -155,6 +155,9 @@ public class RegistroController {
             Partido partido = new Partido(null, nombre, eventoActual.getId());
             partidoRepository.insertar(partido);
             loadPartidos(partido.getId());
+            if (shellController != null) {
+                shellController.refrescarPartidosEnPeleas();
+            }
             clearPartidoFields();
             shellController.setStatus("Partido agregado.");
             focusGalloPeso();
@@ -181,6 +184,9 @@ public class RegistroController {
             Partido partido = new Partido(selectedPartido.getId(), nombre, eventoActual.getId());
             partidoRepository.actualizar(partido);
             loadPartidos(partido.getId());
+            if (shellController != null) {
+                shellController.refrescarPartidosEnPeleas();
+            }
             clearPartidoFields();
             shellController.setStatus("Partido actualizado.");
         } catch (Exception e) {
@@ -199,6 +205,9 @@ public class RegistroController {
 
             partidoRepository.eliminar(selectedPartido.getId());
             loadPartidos(null);
+            if (shellController != null) {
+                shellController.refrescarPartidosEnPeleas();
+            }
             gallos.clear();
             clearPartidoFields();
             shellController.setStatus("Partido eliminado.");

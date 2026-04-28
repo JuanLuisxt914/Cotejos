@@ -21,6 +21,35 @@
     -fx-padding: 8 12 8 12;
 }
 
+.top-nav-bar {
+    -fx-alignment: center-left;
+    -fx-padding: 2 0 0 0;
+}
+
+.top-nav-bar .button {
+    -fx-min-height: 34px;
+    -fx-padding: 6 14 6 14;
+    -fx-font-size: 19px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-font-weight: 800;
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 2 0;
+}
+
+.top-nav-bar .button.active-view {
+    -fx-background-color: rgba(0, 97, 164, 0.08);
+    -fx-text-fill: #191C1E;
+    -fx-border-color: rgba(0, 97, 164, 0.55);
+}
+
+.event-info-inline {
+    -fx-alignment: center-right;
+    -fx-padding: 0 0 0 18;
+}
+
 .drawer-panel {
     -fx-background-color: #FFFFFF;
     -fx-border-color: rgba(83, 95, 112, 0.16);

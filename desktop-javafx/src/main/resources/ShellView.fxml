@@ -18,23 +18,32 @@
                 <Insets bottom="12" left="16" right="16" top="12" />
             </padding>
 
-            <HBox spacing="12">
-                <Button fx:id="menuButton" onAction="#toggleDrawer" styleClass="drawer-toggle-button" text="☰" />
-                <Label styleClass="app-title" text="Cotejador" />
-                <Region HBox.hgrow="ALWAYS" />
-                <Button fx:id="themeToggleButton" onAction="#toggleTheme" styleClass="theme-toggle-button" text="Tema claro" />
-            </HBox>
+            <VBox spacing="8">
+                <HBox spacing="12">
+                    <Label styleClass="app-title" text="Cotejador" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="themeToggleButton" onAction="#toggleTheme" styleClass="theme-toggle-button" text="Tema claro" />
+                </HBox>
 
-            <HBox fx:id="eventInfoBar" managed="false" spacing="18" visible="false">
-                <Label styleClass="event-info-label" text="Evento:" />
-                <Label fx:id="eventNameLabel" styleClass="event-info-value" text="-" />
-                <Label styleClass="event-info-label" text="Fecha:" />
-                <Label fx:id="eventDateLabel" styleClass="event-info-value" text="-" />
-                <Label styleClass="event-info-label" text="Gallos por partido:" />
-                <Label fx:id="eventGallosLabel" styleClass="event-info-value" text="-" />
-                <Label styleClass="event-info-label" text="Modo:" />
-                <Label fx:id="eventModeLabel" styleClass="event-info-value" text="-" />
-            </HBox>
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <HBox fx:id="topNavBar" alignment="CENTER_LEFT" spacing="8" styleClass="top-nav-bar">
+                        <Button fx:id="topEventosButton" onAction="#volverAEventos" styleClass="secondary-action" text="Eventos" />
+                        <Button fx:id="topRegistroButton" onAction="#mostrarRegistro" styleClass="secondary-action" text="Registro" />
+                        <Button fx:id="topPeleasButton" onAction="#mostrarPeleas" styleClass="secondary-action" text="Peleas" />
+                    </HBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <HBox fx:id="eventInfoBar" managed="false" spacing="18" visible="false" styleClass="event-info-inline">
+                        <Label styleClass="event-info-label" text="Evento:" />
+                        <Label fx:id="eventNameLabel" styleClass="event-info-value" text="-" />
+                        <Label styleClass="event-info-label" text="Fecha:" />
+                        <Label fx:id="eventDateLabel" styleClass="event-info-value" text="-" />
+                        <Label styleClass="event-info-label" text="Gallos por partido:" />
+                        <Label fx:id="eventGallosLabel" styleClass="event-info-value" text="-" />
+                        <Label styleClass="event-info-label" text="Modo:" />
+                        <Label fx:id="eventModeLabel" styleClass="event-info-value" text="-" />
+                    </HBox>
+                </HBox>
+            </VBox>
         </VBox>
     </top>
 

@@ -21,6 +21,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.util.Duration;
 
 public class ShellController {
@@ -33,10 +34,13 @@ public class ShellController {
     private static final double DRAWER_WIDTH = 250.0;
     private static final double EVENTOS_WINDOW_WIDTH = 800.0;
     private static final double EVENTOS_WINDOW_HEIGHT = 680.0;
+    private static final double CONTENT_MIN_WINDOW_WIDTH = 1240.0;
+    private static final double CONTENT_MIN_WINDOW_HEIGHT = 820.0;
 
     private enum WindowMode {
         EVENTOS,
-        CONTENIDO
+        REGISTRO,
+        PELEAS
     }
 
     @FXML
@@ -50,6 +54,18 @@ public class ShellController {
 
     @FXML
     private Button menuButton;
+
+    @FXML
+    private javafx.scene.layout.HBox topNavBar;
+
+    @FXML
+    private Button topEventosButton;
+
+    @FXML
+    private Button topRegistroButton;
+
+    @FXML
+    private Button topPeleasButton;
 
     @FXML
     private StackPane contentStack;
@@ -110,6 +126,7 @@ public class ShellController {
     private Evento currentEvento;
     private boolean drawerOpen;
     private WindowMode currentWindowMode = WindowMode.EVENTOS;
+    private boolean maximizeRegistroOnOpen;
     private javafx.stage.Stage primaryStage;
 
     public void initialize() {
@@ -128,6 +145,7 @@ public class ShellController {
         setStatus("Selecciona o crea un evento para continuar.");
         refreshThemeToggleText();
         setDrawerVisible(false);
+        updateTopNavigationVisibility(false);
         updateEventInfo(null, ModoCotejo.ALEATORIO);
         applyWindowMode();
     }
@@ -191,9 +209,11 @@ public class ShellController {
         currentEvento = evento;
         if (evento != null) {
             try {
+                maximizeRegistroOnOpen = true;
                 eventoInfoVisible(true);
                 drawerOpen = false;
                 setDrawerVisible(false);
+                updateTopNavigationVisibility(true);
                 if (registroController != null) {
                     registroController.onEventoCambio(evento);
                 }
@@ -220,6 +240,7 @@ public class ShellController {
             }
             updateEventInfo(null, ModoCotejo.ALEATORIO);
             setDrawerVisible(false);
+            updateTopNavigationVisibility(false);
             mostrarVistaEventos();
         }
     }
@@ -230,6 +251,12 @@ public class ShellController {
             return;
         }
         updateEventInfo(evento, modoCotejo);
+    }
+
+    public void refrescarPartidosEnPeleas() {
+        if (peleasController != null) {
+            peleasController.refrescarPartidosEventoActual();
+        }
     }
 
     private void updateEventInfo(Evento evento, ModoCotejo modoCotejo) {
@@ -265,7 +292,7 @@ public class ShellController {
         if (menuButton != null) {
             menuButton.setDisable(true);
         }
-        setActiveDrawerView(null);
+        setActiveNavigationView(topEventosButton);
         applyWindowMode();
     }
 
@@ -274,10 +301,14 @@ public class ShellController {
             mostrarVistaEventos();
             return;
         }
-        currentWindowMode = WindowMode.CONTENIDO;
+        currentWindowMode = WindowMode.REGISTRO;
         setHostVisibility(false, true, false);
-        setActiveDrawerView(registroButton());
+        setActiveNavigationView(topRegistroButton);
         applyWindowMode();
+        if (maximizeRegistroOnOpen) {
+            maximizeRegistroOnOpen = false;
+            maximizeContentWindow();
+        }
     }
 
     public void mostrarVistaPeleas() {
@@ -285,9 +316,9 @@ public class ShellController {
             mostrarVistaEventos();
             return;
         }
-        currentWindowMode = WindowMode.CONTENIDO;
+        currentWindowMode = WindowMode.PELEAS;
         setHostVisibility(false, false, true);
-        setActiveDrawerView(peleasButton());
+        setActiveNavigationView(topPeleasButton);
         applyWindowMode();
     }
 
@@ -368,9 +399,6 @@ public class ShellController {
         setHostVisible(eventosHost, eventosVisible);
         setHostVisible(registroHost, registroVisible);
         setHostVisible(peleasHost, peleasVisible);
-        if (menuButton != null) {
-            menuButton.setDisable(!registroVisible && !peleasVisible);
-        }
     }
 
     private void setHostVisible(AnchorPane host, boolean visible) {
@@ -446,10 +474,13 @@ public class ShellController {
         transition.play();
     }
 
-    private void setActiveDrawerView(Button activeButton) {
+    private void setActiveNavigationView(Button activeButton) {
+        setTopNavButtonActive(topEventosButton, activeButton != null && activeButton == topEventosButton);
+        setTopNavButtonActive(topRegistroButton, activeButton != null && activeButton == topRegistroButton);
+        setTopNavButtonActive(topPeleasButton, activeButton != null && activeButton == topPeleasButton);
         setDrawerButtonActive(drawerEventosButton, false);
-        setDrawerButtonActive(drawerRegistroButton, activeButton != null && activeButton == drawerRegistroButton);
-        setDrawerButtonActive(drawerPeleasButton, activeButton != null && activeButton == drawerPeleasButton);
+        setDrawerButtonActive(drawerRegistroButton, false);
+        setDrawerButtonActive(drawerPeleasButton, false);
     }
 
     private void setDrawerButtonActive(Button button, boolean active) {
@@ -465,12 +496,25 @@ public class ShellController {
         }
     }
 
-    private Button registroButton() {
-        return drawerRegistroButton;
+    private void setTopNavButtonActive(Button button, boolean active) {
+        if (button == null) {
+            return;
+        }
+        if (active) {
+            if (!button.getStyleClass().contains("active-view")) {
+                button.getStyleClass().add("active-view");
+            }
+        } else {
+            button.getStyleClass().remove("active-view");
+        }
     }
 
-    private Button peleasButton() {
-        return drawerPeleasButton;
+    private void updateTopNavigationVisibility(boolean visible) {
+        if (topNavBar == null) {
+            return;
+        }
+        topNavBar.setVisible(visible);
+        topNavBar.setManaged(visible);
     }
 
     private void applyWindowMode() {
@@ -486,14 +530,43 @@ public class ShellController {
             if (currentWindowMode == WindowMode.EVENTOS) {
                 primaryStage.setMaximized(false);
                 primaryStage.setResizable(false);
+                primaryStage.setMinWidth(0.0);
+                primaryStage.setMinHeight(0.0);
                 primaryStage.setWidth(EVENTOS_WINDOW_WIDTH);
                 primaryStage.setHeight(EVENTOS_WINDOW_HEIGHT);
                 primaryStage.centerOnScreen();
                 return;
             }
 
+            if (currentWindowMode == WindowMode.REGISTRO || currentWindowMode == WindowMode.PELEAS) {
+                primaryStage.setResizable(true);
+                primaryStage.setMinWidth(CONTENT_MIN_WINDOW_WIDTH);
+                primaryStage.setMinHeight(CONTENT_MIN_WINDOW_HEIGHT);
+                return;
+            }
+
+            primaryStage.setMinWidth(0.0);
+            primaryStage.setMinHeight(0.0);
             primaryStage.setResizable(true);
             primaryStage.setMaximized(true);
+        });
+    }
+
+    private void maximizeContentWindow() {
+        if (primaryStage == null) {
+            return;
+        }
+        Platform.runLater(() -> {
+            if (primaryStage != null) {
+                primaryStage.setResizable(true);
+                primaryStage.setMinWidth(CONTENT_MIN_WINDOW_WIDTH);
+                primaryStage.setMinHeight(CONTENT_MIN_WINDOW_HEIGHT);
+                primaryStage.setWidth(Math.max(CONTENT_MIN_WINDOW_WIDTH, Screen.getPrimary().getVisualBounds().getWidth()));
+                primaryStage.setHeight(Math.max(CONTENT_MIN_WINDOW_HEIGHT, Screen.getPrimary().getVisualBounds().getHeight()));
+                primaryStage.setX(Screen.getPrimary().getVisualBounds().getMinX());
+                primaryStage.setY(Screen.getPrimary().getVisualBounds().getMinY());
+                primaryStage.setMaximized(true);
+            }
         });
     }
 }

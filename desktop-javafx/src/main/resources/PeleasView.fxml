@@ -23,6 +23,7 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.cotejador.app.desktop.PeleasController"
             fitToWidth="true"
+            fitToHeight="true"
             styleClass="events-view fight-view">
     <content>
         <VBox spacing="8" styleClass="view-container">
@@ -30,21 +31,29 @@
                 <Insets top="16" right="16" bottom="16" left="16"/>
             </padding>
 
-            <SplitPane dividerPositions="0.50" prefHeight="760.0">
+            <SplitPane fx:id="peleaSplitPane"
+                       dividerPositions="0.25"
+                       prefHeight="760.0"
+                       VBox.vgrow="ALWAYS"
+                       maxWidth="Infinity">
                 <items>
-                    <VBox spacing="12" minWidth="320.0" styleClass="fight-panel">
+                    <VBox spacing="12"
+                            prefWidth="250.0"
+                            minWidth="220.0"
+                            maxWidth="Infinity"
+                          styleClass="fight-panel">
                         <Label text="Generación" styleClass="fight-panel-title"/>
                         <Label text="Define la tolerancia y las reglas del cotejo para el evento actual."
                                wrapText="true"
                                styleClass="fight-panel-note"/>
 
                         <VBox spacing="10">
-                            <Label text="Tolerancia" labelFor="$toleranciaSpinner"/>
+                            <Label text="Tolerancia" labelFor="$toleranciaSpinner" styleClass="generation-label"/>
                             <Spinner fx:id="toleranciaSpinner"
                                      editable="false"
                                      accessibleText="Campo de tolerancia en gramos"/>
 
-                            <Label text="Partidos prioritarios" labelFor="$partidosPrioritariosField"/>
+                            <Label text="Partidos prioritarios" labelFor="$partidosPrioritariosField" styleClass="generation-label"/>
                             <TextField fx:id="partidosPrioritariosField"
                                        promptText="Partidos prioritarios separados por coma"
                                        accessibleText="Campo de partidos prioritarios separados por coma"/>
@@ -80,9 +89,19 @@
                                             <Label text="Gallos que aún no quedaron asignados a una pelea."
                                                    styleClass="fight-panel-note"
                                                    wrapText="true"/>
-                                            <ListView fx:id="gallosSinPeleaList"
-                                                      prefHeight="140.0"
-                                                      accessibleText="Lista de gallos sin pelea"/>
+                                            <TableView fx:id="gallosSinPeleaTable"
+                                                       VBox.vgrow="ALWAYS"
+                                                       prefHeight="180.0"
+                                                       maxWidth="Infinity"
+                                                       styleClass="fight-table"
+                                                       accessibleText="Tabla de gallos sin pelea">
+                                                <columns>
+                                                    <TableColumn fx:id="gallosSinPeleaPartidoColumn" text="Partido"/>
+                                                    <TableColumn fx:id="gallosSinPeleaPesoColumn" text="Peso"/>
+                                                    <TableColumn fx:id="gallosSinPeleaAnilloColumn" text="Anillo"/>
+                                                    <TableColumn fx:id="gallosSinPeleaRondaColumn" text="Ronda"/>
+                                                </columns>
+                                            </TableView>
                                         </VBox>
                                     </content>
                                 </TitledPane>
@@ -90,26 +109,40 @@
                                 <TitledPane fx:id="restriccionesPane" text="Restricciones" expanded="false">
                                     <content>
                                         <VBox spacing="8">
-                                            <Label text="Partido origen" labelFor="$restriccionPartidoOrigenCombo"/>
-                                            <ComboBox fx:id="restriccionPartidoOrigenCombo"
-                                                      promptText="Partido 1"
-                                                      accessibleText="Seleccionar partido origen"/>
+                                            <HBox spacing="10">
+                                                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                                    <Label text="Partido origen" labelFor="$restriccionPartidoOrigenCombo"/>
+                                                    <ComboBox fx:id="restriccionPartidoOrigenCombo"
+                                                              promptText="Partido 1"
+                                                              maxWidth="Infinity"
+                                                              accessibleText="Seleccionar partido origen"/>
+                                                </VBox>
 
-                                            <Label text="Partido destino" labelFor="$restriccionPartidoDestinoCombo"/>
-                                            <ComboBox fx:id="restriccionPartidoDestinoCombo"
-                                                      promptText="Partido 2"
-                                                      accessibleText="Seleccionar partido destino"/>
+                                                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                                    <Label text="Partido destino" labelFor="$restriccionPartidoDestinoCombo"/>
+                                                    <ComboBox fx:id="restriccionPartidoDestinoCombo"
+                                                              promptText="Partido 2"
+                                                              maxWidth="Infinity"
+                                                              accessibleText="Seleccionar partido destino"/>
+                                                </VBox>
+                                            </HBox>
 
                                             <HBox spacing="6">
                                                 <Button text="Agregar restriccion"
                                                         onAction="#agregarRestriccion"
                                                         styleClass="primary-action"
                                                         fx:id="agregarRestriccionButton"
+                                                        maxWidth="Infinity"
+                                                        prefWidth="0.0"
+                                                        HBox.hgrow="ALWAYS"
                                                         accessibleText="Agregar una restriccion entre dos partidos"/>
                                                 <Button text="Eliminar restriccion"
                                                         onAction="#eliminarRestriccion"
                                                         styleClass="danger-action"
                                                         fx:id="eliminarRestriccionButton"
+                                                        maxWidth="Infinity"
+                                                        prefWidth="0.0"
+                                                        HBox.hgrow="ALWAYS"
                                                         accessibleText="Eliminar la restriccion seleccionada"/>
                                             </HBox>
 
@@ -162,11 +195,15 @@
                         </Accordion>
                     </VBox>
 
-                    <VBox spacing="12" minWidth="420.0" styleClass="fight-panel">
+                    <VBox spacing="12"
+                          prefWidth="750.0"
+                          minWidth="0.0"
+                          maxWidth="Infinity"
+                          styleClass="fight-panel">
                         <HBox spacing="10">
                             <VBox spacing="2">
                                 <Label text="Peleas generadas" styleClass="fight-panel-title"/>
-                                <Label text="Arrastra una fila para reordenarla y usa el detalle para editarla."
+                                <Label text="Arrastra una fila para reordenarla y usa doble clic o el boton Editar para abrir el detalle."
                                        styleClass="fight-panel-note"
                                        wrapText="true"/>
                             </VBox>
@@ -175,6 +212,7 @@
                         <TableView fx:id="peleasCotejoTable"
                                    VBox.vgrow="ALWAYS"
                                    prefHeight="620.0"
+                                   maxWidth="Infinity"
                                    editable="false"
                                    styleClass="fight-table"
                                    accessibleText="Tabla de peleas generadas">
@@ -185,13 +223,15 @@
                                 <TableColumn fx:id="peleaGallo2Column" text="Anillo 2" prefWidth="84.0" minWidth="84.0" maxWidth="84.0"/>
                                 <TableColumn fx:id="peleaPeso2Column" text="Peso 2" prefWidth="64.0" minWidth="64.0" maxWidth="64.0"/>
                                 <TableColumn fx:id="peleaDiferenciaColumn" text="Dif." prefWidth="56.0" minWidth="56.0" maxWidth="56.0"/>
-                                <TableColumn fx:id="peleaPartidosColumn" text="Partidos" prefWidth="150.0"/>
+                                <TableColumn fx:id="peleaPartidosColumn" text="Partidos" prefWidth="240.0" minWidth="120.0"/>
+                                <TableColumn fx:id="peleaEditarColumn" text="Acciones" prefWidth="110.0" minWidth="110.0" maxWidth="110.0"/>
                             </columns>
                         </TableView>
 
                         <VBox fx:id="peleaDetallePane"
                               spacing="12"
-                              minWidth="320.0"
+                              minWidth="0.0"
+                              maxWidth="Infinity"
                               visible="false"
                               managed="false"
                               styleClass="fight-panel fight-detail-pane">
@@ -261,20 +301,39 @@
                                 </children>
                             </GridPane>
 
-                            <HBox spacing="8" fillHeight="true">
-                                <Button text="Eliminar"
-                                        fx:id="peleaEliminarButton"
-                                        onAction="#eliminarPeleaSeleccionada"
-                                        styleClass="danger-action"
-                                        accessibleText="Eliminar la pelea seleccionada"/>
+                            <GridPane hgap="8" vgap="0">
+                                <columnConstraints>
+                                    <javafx.scene.layout.ColumnConstraints percentWidth="40"/>
+                                    <javafx.scene.layout.ColumnConstraints percentWidth="30"/>
+                                    <javafx.scene.layout.ColumnConstraints percentWidth="30"/>
+                                </columnConstraints>
                                 <Button text="Aplicar cambios"
                                         fx:id="peleaAplicarButton"
                                         onAction="#aplicarEdicionPelea"
                                         styleClass="primary-action"
                                         maxWidth="Infinity"
-                                        HBox.hgrow="ALWAYS"
+                                        prefWidth="0.0"
+                                        GridPane.columnIndex="0"
+                                        GridPane.hgrow="ALWAYS"
                                         accessibleText="Aplicar los cambios al detalle de pelea"/>
-                            </HBox>
+                                <Button text="Cerrar"
+                                        onAction="#cerrarDetallePelea"
+                                        styleClass="secondary-action"
+                                        prefWidth="0.0"
+                                        maxWidth="Infinity"
+                                        GridPane.columnIndex="1"
+                                        GridPane.hgrow="ALWAYS"
+                                        accessibleText="Cerrar el detalle de pelea"/>
+                                <Button text="Eliminar"
+                                        fx:id="peleaEliminarButton"
+                                        onAction="#eliminarPeleaSeleccionada"
+                                        styleClass="danger-action"
+                                        prefWidth="0.0"
+                                        maxWidth="Infinity"
+                                        GridPane.columnIndex="2"
+                                        GridPane.hgrow="ALWAYS"
+                                        accessibleText="Eliminar la pelea seleccionada"/>
+                            </GridPane>
                         </VBox>
                     </VBox>
                 </items>

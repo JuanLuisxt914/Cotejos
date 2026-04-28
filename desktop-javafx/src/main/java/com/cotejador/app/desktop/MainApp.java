@@ -27,8 +27,8 @@ public class MainApp extends Application {
 
         primaryStage.setTitle("Cotejador");
         primaryStage.setScene(scene);
-        primaryStage.show();
         shellController.setPrimaryStage(primaryStage);
+        primaryStage.show();
     }
 
     public static void main(String[] args) {

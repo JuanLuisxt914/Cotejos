@@ -20,6 +20,35 @@
     -fx-padding: 8 12 8 12;
 }
 
+.top-nav-bar {
+    -fx-alignment: center-left;
+    -fx-padding: 2 0 0 0;
+}
+
+.top-nav-bar .button {
+    -fx-min-height: 34px;
+    -fx-padding: 6 14 6 14;
+    -fx-font-size: 19px;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-font-weight: 800;
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 2 0;
+}
+
+.top-nav-bar .button.active-view {
+    -fx-background-color: rgba(255, 191, 77, 0.10);
+    -fx-text-fill: #fff8e7;
+    -fx-border-color: rgba(255, 191, 77, 0.70);
+}
+
+.event-info-inline {
+    -fx-alignment: center-right;
+    -fx-padding: 0 0 0 18;
+}
+
 .drawer-panel {
     -fx-background-color: linear-gradient(to bottom, rgba(12, 18, 26, 0.98), rgba(18, 28, 40, 0.98));
     -fx-border-color: rgba(255, 191, 77, 0.18);
@@ -109,6 +138,10 @@
     -fx-text-fill: #f3f7fb;
 }
 
+.generation-label {
+    -fx-text-fill: #FFFFFF;
+}
+
 .fight-panel-note {
     -fx-text-fill: #8ea1b8;
 }
@@ -136,6 +169,25 @@
 .events-view .scroll-pane,
 .events-view .viewport,
 .events-view .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.fight-view {
+    -fx-background-color: linear-gradient(to bottom right, #0a1018, #111a25 56%, #070b11);
+}
+
+.app-content {
+    -fx-background-color: linear-gradient(to bottom right, #0a1018, #111a25 56%, #070b11);
+}
+
+.fight-view.scroll-pane,
+.fight-view .scroll-pane,
+.fight-view .viewport,
+.fight-view .scroll-pane > .viewport,
+.fight-view .content,
+.fight-view .scroll-pane > .content {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
     -fx-padding: 0;
