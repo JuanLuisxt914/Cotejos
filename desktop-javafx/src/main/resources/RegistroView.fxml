@@ -4,8 +4,9 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Priority?>
@@ -27,8 +28,8 @@
                 <Insets top="24" right="24" bottom="24" left="24"/>
             </padding>
 
-            <HBox spacing="24" VBox.vgrow="ALWAYS">
-                <VBox spacing="14" styleClass="events-form-panel" HBox.hgrow="ALWAYS">
+            <HBox fx:id="registroSplitBox" spacing="24" VBox.vgrow="ALWAYS">
+                <VBox fx:id="partidosPanel" spacing="14" styleClass="events-form-panel" HBox.hgrow="ALWAYS">
                     <Label text="Partidos" styleClass="view-title"/>
 
                     <Label text="Nombre del partido" labelFor="$partidoNombreField"/>
@@ -42,19 +43,28 @@
                                 accessibleText="Agregar partido"/>
                         <Button text="Editar partido" onAction="#editarPartido" fx:id="editarPartidoButton"
                                 accessibleText="Editar partido seleccionado"/>
-                        <Button text="Eliminar partido" onAction="#eliminarPartido" fx:id="eliminarPartidoButton" styleClass="danger-action"
-                                accessibleText="Eliminar partido seleccionado"/>
                     </HBox>
 
                     <Label text="Partidos del evento" styleClass="section-title"/>
-                    <ListView fx:id="partidoList"
-                              prefHeight="320.0"
-                              minHeight="260.0"
-                              VBox.vgrow="ALWAYS"
-                              accessibleText="Lista de partidos"/>
+                    <TableView fx:id="partidoTable"
+                               prefHeight="320.0"
+                               minHeight="260.0"
+                               styleClass="fight-table"
+                               VBox.vgrow="ALWAYS"
+                               accessibleText="Tabla de partidos del evento">
+                        <columns>
+                            <TableColumn fx:id="partidoNombreColumn" text="Partido" minWidth="150.0"/>
+                            <TableColumn fx:id="partidoOrdenColumn" text="Orden" minWidth="120.0"/>
+                            <TableColumn fx:id="partidoAccionesColumn" text="Acciones" minWidth="130.0"/>
+                        </columns>
+                    </TableView>
                 </VBox>
 
-                <VBox spacing="14" styleClass="events-list-panel" HBox.hgrow="ALWAYS">
+                <VBox fx:id="gallosPanel" spacing="14" styleClass="events-list-panel" HBox.hgrow="ALWAYS">
+                    <Label fx:id="partidoSeleccionadoLabel"
+                           text="Partido no seleccionado"
+                           styleClass="section-title"
+                           style="-fx-font-size: 18px; -fx-font-weight: 700;"/>
                     <Label text="Gallos" styleClass="view-title"/>
 
                     <Label text="Peso en gramos" labelFor="$galloPesoField"/>
@@ -69,25 +79,29 @@
                                accessibleText="Anillo del gallo"
                                onAction="#agregarGallo"/>
 
-                    <CheckBox fx:id="galloObligatorioCheckBox"
-                              text="Gallo obligatorio"
-                              accessibleText="Marca el gallo como obligatorio"/>
-
                     <HBox spacing="6">
                         <Button text="Agregar gallo" onAction="#agregarGallo" fx:id="agregarGalloButton" styleClass="primary-action"
                                 accessibleText="Agregar gallo"/>
                         <Button text="Editar gallo" onAction="#editarGallo" fx:id="editarGalloButton"
                                 accessibleText="Editar gallo seleccionado"/>
-                        <Button text="Eliminar gallo" onAction="#eliminarGallo" fx:id="eliminarGalloButton" styleClass="danger-action"
-                                accessibleText="Eliminar gallo seleccionado"/>
                     </HBox>
 
                     <Label text="Gallos del partido" styleClass="section-title"/>
-                    <ListView fx:id="galloList"
-                              prefHeight="320.0"
-                              minHeight="260.0"
-                              VBox.vgrow="ALWAYS"
-                              accessibleText="Lista de gallos"/>
+                    <TableView fx:id="galloTable"
+                               prefHeight="320.0"
+                               minHeight="260.0"
+                               styleClass="fight-table"
+                               VBox.vgrow="ALWAYS"
+                               accessibleText="Tabla de gallos del partido">
+                        <columns>
+                            <TableColumn fx:id="galloPesoColumn" text="Peso" prefWidth="120.0" minWidth="90.0"/>
+                            <TableColumn fx:id="galloAnilloColumn" text="Anillo" prefWidth="120.0" minWidth="90.0"/>
+                            <TableColumn fx:id="galloEntradaColumn" text="Entrada" prefWidth="120.0" minWidth="90.0"/>
+                            <TableColumn fx:id="galloOrdenColumn" text="Ronda" prefWidth="170.0" minWidth="160.0"/>
+                            <TableColumn fx:id="galloObligatorioColumn" text="Obligatorio" minWidth="110.0"/>
+                            <TableColumn fx:id="galloAccionesColumn" text="Acciones" minWidth="210.0"/>
+                        </columns>
+                    </TableView>
                 </VBox>
             </HBox>
 
