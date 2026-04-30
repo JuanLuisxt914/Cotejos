@@ -1,5 +1,9 @@
 package com.cotejador.app.core.cotejo;
 
+import com.cotejador.app.core.model.Gallo;
+import com.cotejador.app.core.model.PreferenciaOrdenGallo;
+import com.cotejador.app.core.model.PreferenciaOrdenPartido;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,9 +23,10 @@ public class OrdenadorPeleas {
 
         List<Pelea> ordenadas = new ArrayList<Pelea>();
         Pelea peleaAnterior = null;
+        int totalPeleas = restantes.size();
 
         while (!restantes.isEmpty()) {
-            Pelea siguiente = seleccionarSiguiente(restantes, peleaAnterior, parametros);
+            Pelea siguiente = seleccionarSiguiente(restantes, peleaAnterior, parametros, ordenadas.size(), totalPeleas);
             ordenadas.add(siguiente);
             restantes.remove(siguiente);
             peleaAnterior = siguiente;
@@ -32,12 +37,14 @@ public class OrdenadorPeleas {
 
     private Pelea seleccionarSiguiente(List<Pelea> candidatas,
                                        Pelea peleaAnterior,
-                                       ParametrosOrdenamiento parametros) {
+                                       ParametrosOrdenamiento parametros,
+                                       int posicionActual,
+                                       int totalPeleas) {
         Pelea mejor = null;
         int mejorPuntaje = Integer.MIN_VALUE;
 
         for (Pelea candidata : candidatas) {
-            int puntaje = puntaje(candidata, peleaAnterior, parametros);
+            int puntaje = puntaje(candidata, peleaAnterior, parametros, posicionActual, totalPeleas);
             if (mejor == null || puntaje > mejorPuntaje) {
                 mejor = candidata;
                 mejorPuntaje = puntaje;
@@ -47,22 +54,73 @@ public class OrdenadorPeleas {
         return mejor;
     }
 
-    private int puntaje(Pelea candidata, Pelea peleaAnterior, ParametrosOrdenamiento parametros) {
+    private int puntaje(Pelea candidata, Pelea peleaAnterior, ParametrosOrdenamiento parametros,
+                        int posicionActual, int totalPeleas) {
         int puntaje = 0;
 
         if (peleaAnterior == null || !compartenPartido(candidata, peleaAnterior)) {
             puntaje += 1000;
         }
-        if (involucraPartidoPrioritario(candidata, parametros)) {
-            puntaje += 100;
-        }
+        puntaje += puntajePreferenciaPartido(candidata, parametros, posicionActual, totalPeleas);
+        puntaje += puntajePreferenciaGallo(candidata, parametros, posicionActual, totalPeleas);
 
         return puntaje;
     }
 
-    private boolean involucraPartidoPrioritario(Pelea pelea, ParametrosOrdenamiento parametros) {
-        return parametros.getPartidosPrioritarios().contains(pelea.getGallo1().getPartidoId())
-                || parametros.getPartidosPrioritarios().contains(pelea.getGallo2().getPartidoId());
+    private int puntajePreferenciaPartido(Pelea pelea, ParametrosOrdenamiento parametros,
+                                          int posicionActual, int totalPeleas) {
+        int puntaje = 0;
+        puntaje += puntajePartido(pelea.getGallo1().getPartidoId(), parametros, posicionActual, totalPeleas);
+        puntaje += puntajePartido(pelea.getGallo2().getPartidoId(), parametros, posicionActual, totalPeleas);
+        return puntaje;
+    }
+
+    private int puntajePartido(Long partidoId, ParametrosOrdenamiento parametros,
+                               int posicionActual, int totalPeleas) {
+        PreferenciaOrdenPartido preferencia = parametros.getPreferenciasPartidos().get(partidoId);
+        if (preferencia == null || preferencia == PreferenciaOrdenPartido.NORMAL) {
+            return 0;
+        }
+        int desdeFinal = Math.max(0, totalPeleas - posicionActual - 1);
+        if (preferencia == PreferenciaOrdenPartido.PRIMERAS) {
+            return 200 + desdeFinal;
+        }
+        if (preferencia == PreferenciaOrdenPartido.ULTIMAS) {
+            return -200 + posicionActual;
+        }
+        return 0;
+    }
+
+    private int puntajePreferenciaGallo(Pelea pelea, ParametrosOrdenamiento parametros,
+                                        int posicionActual, int totalPeleas) {
+        return puntajeGallo(pelea.getGallo1(), parametros, posicionActual, totalPeleas)
+                + puntajeGallo(pelea.getGallo2(), parametros, posicionActual, totalPeleas);
+    }
+
+    private int puntajeGallo(Gallo gallo, ParametrosOrdenamiento parametros,
+                             int posicionActual, int totalPeleas) {
+        if (gallo == null || gallo.getId() == null) {
+            return 0;
+        }
+        PreferenciaOrdenGallo preferencia = parametros.getPreferenciasGallos().get(gallo.getId());
+        if (preferencia == null || preferencia == PreferenciaOrdenGallo.SIN_PREFERENCIA) {
+            return 0;
+        }
+        if (preferencia == PreferenciaOrdenGallo.PRIMERA_RONDA) {
+            return 500 + Math.max(0, totalPeleas - posicionActual - 1);
+        }
+        if (preferencia == PreferenciaOrdenGallo.ULTIMA_RONDA) {
+            return -500 + posicionActual;
+        }
+        if (preferencia == PreferenciaOrdenGallo.RONDA_ESPECIFICA) {
+            Integer ronda = parametros.getRondasPreferidasGallos().get(gallo.getId());
+            if (ronda == null || ronda <= 0) {
+                return 0;
+            }
+            int distancia = Math.abs((posicionActual + 1) - ronda);
+            return 400 - (distancia * 80);
+        }
+        return 0;
     }
 
     private boolean compartenPartido(Pelea pelea1, Pelea pelea2) {

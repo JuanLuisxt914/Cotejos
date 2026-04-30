@@ -25,6 +25,7 @@ public class DatabaseInitializer {
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "nombre TEXT NOT NULL, " +
                     "evento_id INTEGER NOT NULL, " +
+                    "preferencia_orden TEXT NOT NULL DEFAULT 'NORMAL', " +
                     "FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE" +
                     ")";
     private static final String CREATE_GALLOS_TABLE =
@@ -33,6 +34,9 @@ public class DatabaseInitializer {
                     "peso REAL NOT NULL CHECK (peso > 0), " +
                     "anillo TEXT, " +
                     "obligatorio INTEGER NOT NULL DEFAULT 0, " +
+                    "orden_registro INTEGER NOT NULL DEFAULT 0, " +
+                    "preferencia_orden TEXT NOT NULL DEFAULT 'SIN_PREFERENCIA', " +
+                    "ronda_preferida INTEGER, " +
                     "partido_id INTEGER NOT NULL, " +
                     "FOREIGN KEY (partido_id) REFERENCES partidos(id) ON DELETE CASCADE" +
                     ")";
@@ -69,6 +73,7 @@ public class DatabaseInitializer {
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "cotejo_id INTEGER NOT NULL, " +
                     "orden INTEGER NOT NULL, " +
+                    "ronda INTEGER NOT NULL DEFAULT 1, " +
                     "gallo_1_id INTEGER NOT NULL, " +
                     "gallo_2_id INTEGER NOT NULL, " +
                     "diferencia_peso REAL NOT NULL, " +
@@ -81,6 +86,7 @@ public class DatabaseInitializer {
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "cotejo_id INTEGER NOT NULL, " +
                     "gallo_id INTEGER NOT NULL, " +
+                    "ronda INTEGER NOT NULL DEFAULT 1, " +
                     "FOREIGN KEY (cotejo_id) REFERENCES cotejos(id) ON DELETE CASCADE, " +
                     "FOREIGN KEY (gallo_id) REFERENCES gallos(id) ON DELETE CASCADE" +
                     ")";
@@ -102,6 +108,7 @@ public class DatabaseInitializer {
             createCotejoTables(statement);
             ensureEventoColumns(connection);
             repairBrokenCotejoSchema(connection, statement);
+            ensureCotejoDetailColumns(connection);
         }
     }
 
@@ -136,6 +143,33 @@ public class DatabaseInitializer {
                 statement.execute("ALTER TABLE gallos ADD COLUMN obligatorio INTEGER NOT NULL DEFAULT 0");
             }
         }
+        if (!hasColumn(connection, "gallos", "orden_registro")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE gallos ADD COLUMN orden_registro INTEGER NOT NULL DEFAULT 0");
+            }
+        }
+        if (!hasColumn(connection, "partidos", "preferencia_orden")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE partidos ADD COLUMN preferencia_orden TEXT NOT NULL DEFAULT 'NORMAL'");
+            }
+        }
+        if (!hasColumn(connection, "gallos", "preferencia_orden")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE gallos ADD COLUMN preferencia_orden TEXT NOT NULL DEFAULT 'SIN_PREFERENCIA'");
+            }
+        }
+        if (!hasColumn(connection, "gallos", "ronda_preferida")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE gallos ADD COLUMN ronda_preferida INTEGER");
+            }
+        }
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(
+                    "UPDATE gallos SET orden_registro = (" +
+                            "SELECT COUNT(*) FROM gallos g2 " +
+                            "WHERE g2.partido_id = gallos.partido_id AND g2.id <= gallos.id" +
+                            ") WHERE orden_registro <= 0");
+        }
     }
 
     private boolean hasColumn(Connection connection, String tableName, String columnName) throws SQLException {
@@ -148,6 +182,19 @@ public class DatabaseInitializer {
             }
         }
         return false;
+    }
+
+    private void ensureCotejoDetailColumns(Connection connection) throws SQLException {
+        if (!hasColumn(connection, "peleas_generadas", "ronda")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE peleas_generadas ADD COLUMN ronda INTEGER NOT NULL DEFAULT 1");
+            }
+        }
+        if (!hasColumn(connection, "gallos_sin_pelea", "ronda")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE gallos_sin_pelea ADD COLUMN ronda INTEGER NOT NULL DEFAULT 1");
+            }
+        }
     }
 
     private void repairBrokenCotejoSchema(Connection connection, Statement statement) throws SQLException {

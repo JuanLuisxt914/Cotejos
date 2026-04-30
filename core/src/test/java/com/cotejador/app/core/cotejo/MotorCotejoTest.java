@@ -16,6 +16,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class MotorCotejoTest {
@@ -307,7 +308,36 @@ public class MotorCotejoTest {
 
         assertEquals(3, resultado.getPeleas().size());
         assertEquals(0, resultado.getGallosSinPelea().size());
+        assertEquals(1, resultado.getPeleas().get(0).getRonda());
+        assertEquals(2, resultado.getPeleas().get(1).getRonda());
+        assertEquals(3, resultado.getPeleas().get(2).getRonda());
         assertNoRepeatedIds(resultado.getPeleas());
+    }
+
+    @Test
+    public void enModoRondasRegistraLaRondaDelGalloSinPelea() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A1", 1000, 10L),
+                        gallo(2L, "A2", 1002, 10L),
+                        gallo(3L, "B1", 1001, 20L),
+                        gallo(4L, "B2", 1100, 20L)
+                ),
+                parametrosConModo(5, ModoCotejo.RONDAS)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertEquals(2, resultado.getGallosSinPelea().size());
+        boolean hayGalloSinPeleaDeSegundaRonda = false;
+        for (Gallo galloSinPelea : resultado.getGallosSinPelea()) {
+            Integer ronda = resultado.getRondasPorGalloId().get(galloSinPelea.getId());
+            assertNotNull(ronda);
+            hayGalloSinPeleaDeSegundaRonda = hayGalloSinPeleaDeSegundaRonda || ronda == 2;
+        }
+        assertTrue(hayGalloSinPeleaDeSegundaRonda);
+        Pelea pelea = resultado.getPeleas().get(0);
+        assertEquals(resultado.getRondasPorGalloId().get(pelea.getGallo1().getId()).intValue(), pelea.getRonda());
+        assertEquals(resultado.getRondasPorGalloId().get(pelea.getGallo2().getId()).intValue(), pelea.getRonda());
     }
 
     @Test

@@ -142,6 +142,39 @@
     -fx-text-fill: #FFFFFF;
 }
 
+.fight-view .fight-rules-pane .label,
+.fight-view .fight-rules-pane .check-box,
+.fight-view .fight-rules-pane .check-box .text,
+.fight-view .fight-rules-pane > .title > .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+}
+
+.fight-view .fight-rules-pane .combo-box-base,
+.fight-view .fight-rules-pane .combo-box-base .list-cell,
+.fight-view .fight-rules-pane .combo-box .list-cell,
+.fight-view .fight-rules-pane .combo-box-popup .list-view .list-cell,
+.fight-view .fight-rules-pane .combo-box-popup .list-view .list-cell .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+}
+
+.fight-view .fight-rules-pane .check-box:disabled,
+.fight-view .fight-rules-pane .label:disabled,
+.fight-view .fight-rules-pane .combo-box-base:disabled {
+    -fx-opacity: 1.0;
+}
+
+.fight-view .fight-rules-pane .check-box:disabled .text,
+.fight-view .fight-rules-pane .label:disabled .text,
+.fight-view .fight-rules-pane .combo-box-base:disabled,
+.fight-view .fight-rules-pane .combo-box-base:disabled .text,
+.fight-view .fight-rules-pane .combo-box-base:disabled .list-cell,
+.fight-view .fight-rules-pane .combo-box-base:disabled .list-cell .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+}
+
 .fight-panel-note {
     -fx-text-fill: #8ea1b8;
 }
@@ -151,7 +184,12 @@
     -fx-background-radius: 14;
     -fx-border-color: rgba(106, 131, 164, 0.10);
     -fx-border-radius: 14;
-    -fx-padding: 12;
+    -fx-padding: 18 14 18 14;
+}
+
+.fight-rules-pane .label,
+.fight-rules-pane .check-box {
+    -fx-padding: 4 0 4 0;
 }
 
 .section-title {
@@ -236,6 +274,21 @@
 .events-view .combo-box-base:focused {
     -fx-border-color: #5f85b4;
     -fx-effect: dropshadow(gaussian, rgba(95, 133, 180, 0.18), 10, 0.2, 0, 0);
+}
+
+/* Registro > Gallos: texto en blanco al capturar y al mostrar filas nuevas */
+#gallosPanel .text-field {
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: #C7D6E8;
+}
+
+#gallosPanel .table-cell,
+#gallosPanel .table-row-cell,
+#gallosPanel .label,
+#gallosPanel .check-box,
+#gallosPanel .check-box .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
 }
 
 .events-view .button {
@@ -328,12 +381,13 @@
 
 .button.primary-action {
     -fx-background-color: linear-gradient(to bottom, #d2a24a, #9a6f22);
-    -fx-text-fill: #1e232b;
+    -fx-text-fill: #FFFFFF;
     -fx-border-color: rgba(255, 221, 149, 0.35);
 }
 
 .button.primary-action:hover {
     -fx-background-color: linear-gradient(to bottom, #deb15b, #ae7b27);
+    -fx-text-fill: #FFFFFF;
 }
 
 .button.danger-action {
@@ -523,6 +577,75 @@
     -fx-background-color: linear-gradient(to right, rgba(255, 191, 77, 0.18), rgba(255, 191, 77, 0.06));
 }
 
+.fight-table .table-row-cell.entrada-color-1 {
+    -fx-background-color: rgba(76, 120, 168, 0.12);
+}
+
+.fight-table .table-row-cell.entrada-color-2 {
+    -fx-background-color: rgba(67, 132, 103, 0.12);
+}
+
+.fight-table .table-row-cell.entrada-color-3 {
+    -fx-background-color: rgba(210, 162, 74, 0.10);
+}
+
+.fight-table .table-row-cell.entrada-color-4 {
+    -fx-background-color: rgba(132, 112, 190, 0.12);
+}
+
+.fight-table .table-row-cell.entrada-color-1:hover,
+.fight-table .table-row-cell.entrada-color-2:hover,
+.fight-table .table-row-cell.entrada-color-3:hover,
+.fight-table .table-row-cell.entrada-color-4:hover {
+    -fx-background-color: rgba(255, 191, 77, 0.10);
+}
+
+.fight-table .table-row-cell.entrada-color-1:filled:selected,
+.fight-table .table-row-cell.entrada-color-2:filled:selected,
+.fight-table .table-row-cell.entrada-color-3:filled:selected,
+.fight-table .table-row-cell.entrada-color-4:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(255, 191, 77, 0.22), rgba(255, 191, 77, 0.08));
+}
+
+.fight-table .table-row-cell.partido-color-1 {
+    -fx-background-color: rgba(76, 120, 168, 0.12);
+}
+
+.fight-table .table-row-cell.partido-color-2 {
+    -fx-background-color: rgba(67, 132, 103, 0.12);
+}
+
+.fight-table .table-row-cell.partido-color-3 {
+    -fx-background-color: rgba(210, 162, 74, 0.10);
+}
+
+.fight-table .table-row-cell.partido-color-4 {
+    -fx-background-color: rgba(132, 112, 190, 0.12);
+}
+
+.fight-table .table-row-cell.partido-color-1:hover,
+.fight-table .table-row-cell.partido-color-2:hover,
+.fight-table .table-row-cell.partido-color-3:hover,
+.fight-table .table-row-cell.partido-color-4:hover {
+    -fx-background-color: rgba(255, 191, 77, 0.10);
+}
+
+.fight-table .table-row-cell.partido-color-1:filled:selected,
+.fight-table .table-row-cell.partido-color-2:filled:selected,
+.fight-table .table-row-cell.partido-color-3:filled:selected,
+.fight-table .table-row-cell.partido-color-4:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(255, 191, 77, 0.22), rgba(255, 191, 77, 0.08));
+}
+
+.fight-table .combo-box-base,
+.fight-table .combo-box-base .list-cell,
+.fight-table .combo-box .list-cell,
+.fight-table .combo-box-popup .list-view .list-cell,
+.fight-table .combo-box-popup .list-view .list-cell .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+}
+
 .fight-table .table-row-cell:drag-active {
     -fx-background-color: linear-gradient(to right, rgba(255, 191, 77, 0.24), rgba(255, 191, 77, 0.10));
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.36), 18, 0.22, 0, 4);
@@ -588,4 +711,62 @@
 .fight-card .button {
     -fx-padding: 6 10 6 10;
     -fx-font-size: 12px;
+}
+
+#ultimaRondaSoloObligatoriosCheckBox,
+#excluirObligatoriosDelCotejoCheckBox,
+#ultimaRondaSoloObligatoriosCheckBox .text,
+#excluirObligatoriosDelCotejoCheckBox .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+    -fx-opacity: 1.0;
+}
+
+#ultimaRondaSoloObligatoriosCheckBox:disabled,
+#excluirObligatoriosDelCotejoCheckBox:disabled,
+#ultimaRondaSoloObligatoriosCheckBox:disabled .text,
+#excluirObligatoriosDelCotejoCheckBox:disabled .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+    -fx-opacity: 1.0;
+}
+
+#modoAleatorioRadio,
+#modoRondasRadio,
+#modoAleatorioRadio .text,
+#modoRondasRadio .text,
+#modoAleatorioRadio:disabled,
+#modoRondasRadio:disabled,
+#modoAleatorioRadio:disabled .text,
+#modoRondasRadio:disabled .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+    -fx-opacity: 1.0;
+}
+
+.combo-box-popup .list-view .list-cell,
+.combo-box-popup .list-view .list-cell .text {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+}
+
+#restriccionesPane,
+#restriccionesPane .label,
+#restriccionesPane .section-title,
+#restriccionesPane > .title > .text,
+#restriccionesPane .combo-box-base,
+#restriccionesPane .combo-box-base .list-cell,
+#restriccionesPane .list-view .list-cell {
+    -fx-text-fill: #FFFFFF;
+    -fx-fill: #FFFFFF;
+}
+
+#restriccionesPane .text-field,
+#restriccionesPane .combo-box-base {
+    -fx-prompt-text-fill: #C7D6E8;
+}
+
+#restriccionesPane .button.primary-action,
+#restriccionesPane .button.primary-action:hover {
+    -fx-text-fill: #FFFFFF;
 }

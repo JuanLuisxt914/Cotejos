@@ -98,6 +98,11 @@ public class ShellController {
     private Label eventGallosLabel;
 
     @FXML
+    private Label eventPartidosLabel;
+    @FXML
+    private Label eventTotalPartidosLabel;
+
+    @FXML
     private Label eventModeLabel;
 
     @FXML
@@ -270,6 +275,8 @@ public class ShellController {
             eventNameLabel.setText("-");
             eventDateLabel.setText("-");
             eventGallosLabel.setText("-");
+            eventPartidosLabel.setText("-");
+            eventTotalPartidosLabel.setText("-");
             eventModeLabel.setText("-");
             return;
         }
@@ -279,7 +286,43 @@ public class ShellController {
         eventNameLabel.setText(safeText(evento.getNombre()));
         eventDateLabel.setText(safeText(evento.getFecha()));
         eventGallosLabel.setText(String.valueOf(evento.getGallosPorPartido()));
+        eventTotalPartidosLabel.setText(obtenerTotalPartidos(evento));
+        eventPartidosLabel.setText(obtenerTotalEntradas(evento));
         eventModeLabel.setText(modoCotejo == ModoCotejo.RONDAS ? "Por rondas" : "Aleatorio");
+    }
+
+    private String obtenerTotalPartidos(Evento evento) {
+        if (evento == null || evento.getId() == null || partidoRepository == null) {
+            return "-";
+        }
+        try {
+            return String.valueOf(partidoRepository.listarPorEvento(evento.getId()).size());
+        } catch (Exception e) {
+            return "-";
+        }
+    }
+
+    private String obtenerTotalEntradas(Evento evento) {
+        if (evento == null || evento.getId() == null || partidoRepository == null || galloRepository == null) {
+            return "-";
+        }
+        int gallosPorPartido = evento.getGallosPorPartido();
+        if (gallosPorPartido <= 0) {
+            return "-";
+        }
+        try {
+            int totalEntradas = 0;
+            for (com.cotejador.app.core.model.Partido partido : partidoRepository.listarPorEvento(evento.getId())) {
+                int totalGallosPartido = galloRepository.listarPorPartido(partido.getId()).size();
+                if (totalGallosPartido <= 0) {
+                    continue;
+                }
+                totalEntradas += (totalGallosPartido + gallosPorPartido - 1) / gallosPorPartido;
+            }
+            return String.valueOf(totalEntradas);
+        } catch (Exception e) {
+            return "-";
+        }
     }
 
     private String safeText(String value) {

@@ -1,6 +1,7 @@
 package com.cotejador.app.data.sqlite;
 
 import com.cotejador.app.core.model.Partido;
+import com.cotejador.app.core.model.PreferenciaOrdenPartido;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,13 +13,13 @@ import java.util.List;
 
 public class PartidoRepository {
     private static final String INSERT_PARTIDO =
-            "INSERT INTO partidos (nombre, evento_id) VALUES (?, ?)";
+            "INSERT INTO partidos (nombre, evento_id, preferencia_orden) VALUES (?, ?, ?)";
     private static final String SELECT_PARTIDOS_BY_EVENTO =
-            "SELECT id, nombre, evento_id FROM partidos WHERE evento_id = ? ORDER BY id";
+            "SELECT id, nombre, evento_id, preferencia_orden FROM partidos WHERE evento_id = ? ORDER BY id";
     private static final String SELECT_PARTIDO_BY_ID =
-            "SELECT id, nombre, evento_id FROM partidos WHERE id = ?";
+            "SELECT id, nombre, evento_id, preferencia_orden FROM partidos WHERE id = ?";
     private static final String UPDATE_PARTIDO =
-            "UPDATE partidos SET nombre = ? WHERE id = ?";
+            "UPDATE partidos SET nombre = ?, preferencia_orden = ? WHERE id = ?";
     private static final String DELETE_PARTIDO =
             "DELETE FROM partidos WHERE id = ?";
 
@@ -33,6 +34,7 @@ public class PartidoRepository {
              PreparedStatement statement = connection.prepareStatement(INSERT_PARTIDO, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, partido.getNombre());
             statement.setLong(2, partido.getEventoId());
+            statement.setString(3, partido.getPreferenciaOrden().name());
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -55,7 +57,8 @@ public class PartidoRepository {
                     partidos.add(new Partido(
                             resultSet.getLong("id"),
                             resultSet.getString("nombre"),
-                            resultSet.getLong("evento_id")
+                            resultSet.getLong("evento_id"),
+                            PreferenciaOrdenPartido.fromDb(resultSet.getString("preferencia_orden"))
                     ));
                 }
             }
@@ -74,7 +77,8 @@ public class PartidoRepository {
                     return new Partido(
                             resultSet.getLong("id"),
                             resultSet.getString("nombre"),
-                            resultSet.getLong("evento_id")
+                            resultSet.getLong("evento_id"),
+                            PreferenciaOrdenPartido.fromDb(resultSet.getString("preferencia_orden"))
                     );
                 }
             }
@@ -85,9 +89,10 @@ public class PartidoRepository {
 
     public void actualizar(Partido partido) throws SQLException {
         try (Connection connection = connectionFactory.getConnection();
-             PreparedStatement statement = connection.prepareStatement(UPDATE_PARTIDO)) {
+            PreparedStatement statement = connection.prepareStatement(UPDATE_PARTIDO)) {
             statement.setString(1, partido.getNombre());
-            statement.setLong(2, partido.getId());
+            statement.setString(2, partido.getPreferenciaOrden().name());
+            statement.setLong(3, partido.getId());
             statement.executeUpdate();
         }
     }

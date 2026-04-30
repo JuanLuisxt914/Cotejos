@@ -7,12 +7,15 @@ import com.cotejador.app.core.cotejo.ParametrosOrdenamiento;
 import com.cotejador.app.core.cotejo.Pelea;
 import com.cotejador.app.core.cotejo.ResultadoCotejo;
 import com.cotejador.app.core.model.CotejoGuardado;
+import com.cotejador.app.core.model.EntradaGallo;
 import com.cotejador.app.core.model.Evento;
 import com.cotejador.app.core.model.Gallo;
 import com.cotejador.app.core.model.ModoCotejo;
 import com.cotejador.app.core.model.GalloSinPeleaGuardado;
 import com.cotejador.app.core.model.Partido;
 import com.cotejador.app.core.model.PeleaGuardada;
+import com.cotejador.app.core.model.PreferenciaOrdenGallo;
+import com.cotejador.app.core.model.PreferenciaOrdenPartido;
 import com.cotejador.app.core.model.RestriccionPartido;
 import com.cotejador.app.data.sqlite.CotejoRepository;
 import com.cotejador.app.data.sqlite.EventoRepository;
@@ -29,12 +32,14 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.application.Platform;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Button;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -48,6 +53,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -73,10 +79,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PeleasController {
     private static final DateTimeFormatter COTEJO_FECHA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -107,6 +111,7 @@ public class PeleasController {
 
     private final ObservableList<Partido> partidos = FXCollections.observableArrayList();
     private final ObservableList<Pelea> peleasCotejo = FXCollections.observableArrayList();
+    private final ObservableList<PeleaFila> peleasCotejoFilas = FXCollections.observableArrayList();
     private final ObservableList<Gallo> gallosSinPelea = FXCollections.observableArrayList();
     private final ObservableList<Gallo> gallosEvento = FXCollections.observableArrayList();
     private final ObservableList<RestriccionPartido> restricciones = FXCollections.observableArrayList();
@@ -120,9 +125,11 @@ public class PeleasController {
     @FXML
     private Spinner<Double> toleranciaSpinner;
     @FXML
-    private TextField partidosPrioritariosField;
+    private RadioButton modoAleatorioRadio;
     @FXML
-    private ComboBox<String> modoCotejoComboBox;
+    private RadioButton modoRondasRadio;
+    @FXML
+    private ToggleGroup modoCotejoToggleGroup;
     @FXML
     private CheckBox ultimaRondaSoloObligatoriosCheckBox;
     @FXML
@@ -130,25 +137,29 @@ public class PeleasController {
     @FXML
     private VBox reglasCotejoBox;
     @FXML
+    private TitledPane reglasCotejoPane;
+    @FXML
     private SplitPane peleaSplitPane;
     @FXML
-    private TableView<Pelea> peleasCotejoTable;
+    private TableView<PeleaFila> peleasCotejoTable;
     @FXML
-    private TableColumn<Pelea, Number> peleaNumeroColumn;
+    private TableColumn<PeleaFila, Number> peleaNumeroColumn;
     @FXML
-    private TableColumn<Pelea, String> peleaGallo1Column;
+    private TableColumn<PeleaFila, Number> peleaRondaColumn;
     @FXML
-    private TableColumn<Pelea, String> peleaPeso1Column;
+    private TableColumn<PeleaFila, String> peleaGallo1Column;
     @FXML
-    private TableColumn<Pelea, String> peleaGallo2Column;
+    private TableColumn<PeleaFila, String> peleaPeso1Column;
     @FXML
-    private TableColumn<Pelea, String> peleaPeso2Column;
+    private TableColumn<PeleaFila, String> peleaGallo2Column;
     @FXML
-    private TableColumn<Pelea, String> peleaDiferenciaColumn;
+    private TableColumn<PeleaFila, String> peleaPeso2Column;
     @FXML
-    private TableColumn<Pelea, String> peleaPartidosColumn;
+    private TableColumn<PeleaFila, String> peleaDiferenciaColumn;
     @FXML
-    private TableColumn<Pelea, Void> peleaEditarColumn;
+    private TableColumn<PeleaFila, String> peleaPartidosColumn;
+    @FXML
+    private TableColumn<PeleaFila, Void> peleaEditarColumn;
     @FXML
     private VBox peleaDetallePane;
     @FXML
@@ -263,19 +274,21 @@ public class PeleasController {
         initializeDetallePelea();
         bindListViews();
         configureCotejosGuardadosList();
-        expandirGallosSinPelea();
+        actualizarExpansionGallosSinPelea();
         aplicarProporcionSplitPane();
     }
 
     private void bindListViews() {
-        peleasCotejoTable.setItems(peleasCotejo);
+        peleasCotejo.addListener((ListChangeListener<Pelea>) change -> rebuildPeleasCotejoFilas());
+        peleasCotejoTable.setItems(peleasCotejoFilas);
+        rebuildPeleasCotejoFilas();
         if (gallosSinPeleaTable != null) {
             gallosSinPeleaTable.setItems(gallosSinPelea);
             gallosSinPeleaTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         }
         if (gallosSinPeleaPartidoColumn != null) {
             gallosSinPeleaPartidoColumn.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(nombrePartido(cellData.getValue().getPartidoId())));
+                    new ReadOnlyStringWrapper(nombrePartidoConEntrada(cellData.getValue())));
         }
         if (gallosSinPeleaPesoColumn != null) {
             gallosSinPeleaPesoColumn.setCellValueFactory(cellData ->
@@ -357,9 +370,9 @@ public class PeleasController {
         Platform.runLater(ajustar);
     }
 
-    private void expandirGallosSinPelea() {
+    private void actualizarExpansionGallosSinPelea() {
         if (gallosSinPeleaPane != null) {
-            gallosSinPeleaPane.setExpanded(true);
+            gallosSinPeleaPane.setExpanded(eventoActual != null && eventoActual.getGallosPorPartido() == 1);
         }
     }
 
@@ -369,10 +382,11 @@ public class PeleasController {
     }
 
     private void initializeReglasCotejo() {
-        if (modoCotejoComboBox != null) {
-            modoCotejoComboBox.setItems(FXCollections.observableArrayList("Aleatorio", "Por rondas"));
-            modoCotejoComboBox.getSelectionModel().select(0);
-            modoCotejoComboBox.valueProperty().addListener((observable, oldValue, newValue) -> notifyRuleChange());
+        if (modoCotejoToggleGroup != null) {
+            if (modoAleatorioRadio != null) {
+                modoAleatorioRadio.setSelected(true);
+            }
+            modoCotejoToggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> notifyRuleChange());
         }
         if (excluirObligatoriosDelCotejoCheckBox != null && ultimaRondaSoloObligatoriosCheckBox != null) {
             excluirObligatoriosDelCotejoCheckBox.selectedProperty().addListener((observable, oldValue, selected) -> {
@@ -416,53 +430,58 @@ public class PeleasController {
         if (peleaNumeroColumn != null) {
             peleaNumeroColumn.setResizable(false);
             peleaNumeroColumn.setCellValueFactory(cellData ->
-                    new ReadOnlyObjectWrapper<>(peleasCotejo.indexOf(cellData.getValue()) + 1));
+                    new ReadOnlyObjectWrapper<>(peleasCotejoFilas.indexOf(cellData.getValue()) + 1));
+        }
+        if (peleaRondaColumn != null) {
+            peleaRondaColumn.setResizable(false);
+            peleaRondaColumn.setCellValueFactory(cellData ->
+                    new ReadOnlyObjectWrapper<>(cellData.getValue().getNumeroRondaMostrada()));
         }
         if (peleaGallo1Column != null) {
             peleaGallo1Column.setResizable(false);
             peleaGallo1Column.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearAnilloCompacto(cellData.getValue().getGallo1())));
+                    new ReadOnlyStringWrapper(formatearAnilloCompacto(cellData.getValue().getPelea().getGallo1())));
         }
         if (peleaPeso1Column != null) {
             peleaPeso1Column.setResizable(false);
             peleaPeso1Column.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearPesoCompacto(cellData.getValue().getGallo1().getPeso())));
+                    new ReadOnlyStringWrapper(formatearPesoCompacto(cellData.getValue().getPelea().getGallo1().getPeso())));
         }
         if (peleaGallo2Column != null) {
             peleaGallo2Column.setResizable(false);
             peleaGallo2Column.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearAnilloCompacto(cellData.getValue().getGallo2())));
+                    new ReadOnlyStringWrapper(formatearAnilloCompacto(cellData.getValue().getPelea().getGallo2())));
         }
         if (peleaPeso2Column != null) {
             peleaPeso2Column.setResizable(false);
             peleaPeso2Column.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearPesoCompacto(cellData.getValue().getGallo2().getPeso())));
+                    new ReadOnlyStringWrapper(formatearPesoCompacto(cellData.getValue().getPelea().getGallo2().getPeso())));
         }
         if (peleaDiferenciaColumn != null) {
             peleaDiferenciaColumn.setResizable(false);
             peleaDiferenciaColumn.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearDiferenciaCompacta(cellData.getValue().getDiferenciaPeso())));
+                    new ReadOnlyStringWrapper(formatearDiferenciaCompacta(cellData.getValue().getPelea().getDiferenciaPeso())));
         }
         if (peleaPartidosColumn != null) {
             peleaPartidosColumn.setResizable(true);
             peleaPartidosColumn.setCellValueFactory(cellData ->
                     new ReadOnlyStringWrapper(
-                            nombrePartido(cellData.getValue().getGallo1().getPartidoId()) +
+                            nombrePartidoConEntrada(cellData.getValue().getPelea().getGallo1()) +
                                     " / " +
-                                    nombrePartido(cellData.getValue().getGallo2().getPartidoId())));
+                                    nombrePartidoConEntrada(cellData.getValue().getPelea().getGallo2())));
         }
         if (peleaEditarColumn != null) {
             peleaEditarColumn.setSortable(false);
             peleaEditarColumn.setResizable(false);
-            peleaEditarColumn.setCellFactory(column -> new TableCell<Pelea, Void>() {
+            peleaEditarColumn.setCellFactory(column -> new TableCell<PeleaFila, Void>() {
                 private final Button editarButton = crearBotonEditarPelea();
                 private final Button eliminarButton = crearBotonEliminarPelea();
                 private final HBox accionesBox = new HBox(6, editarButton, eliminarButton);
 
                 {
                     editarButton.setOnAction(event -> {
-                        Pelea pelea = getTableView().getItems().get(getIndex());
-                        abrirDetallePelea(pelea);
+                        PeleaFila fila = getTableView().getItems().get(getIndex());
+                        abrirDetallePelea(fila == null ? null : fila.getPelea());
                     });
                     eliminarButton.setOnAction(event -> eliminarPeleaEnIndice(getIndex()));
                     setAlignment(Pos.CENTER);
@@ -504,6 +523,7 @@ public class PeleasController {
         Runnable ajustar = () -> {
             double fixedWidth = 0.0;
             fixedWidth += anchoColumna(peleaNumeroColumn);
+            fixedWidth += anchoColumna(peleaRondaColumn);
             fixedWidth += anchoColumna(peleaGallo1Column);
             fixedWidth += anchoColumna(peleaPeso1Column);
             fixedWidth += anchoColumna(peleaGallo2Column);
@@ -579,8 +599,10 @@ public class PeleasController {
         cotejoEditableActual = null;
         cotejoImpresionActual = null;
         peleaSeleccionada.set(null);
-        if (partidosPrioritariosField != null) {
-            partidosPrioritariosField.clear();
+        if (reglasCotejoPane != null) {
+            reglasCotejoPane.setVisible(false);
+            reglasCotejoPane.setManaged(false);
+            reglasCotejoPane.setExpanded(false);
         }
         if (reglasCotejoBox != null) {
             reglasCotejoBox.setVisible(false);
@@ -590,8 +612,8 @@ public class PeleasController {
             ultimaRondaSoloObligatoriosCheckBox.setSelected(false);
             ultimaRondaSoloObligatoriosCheckBox.setDisable(false);
         }
-        if (modoCotejoComboBox != null) {
-            modoCotejoComboBox.getSelectionModel().select(0);
+        if (modoAleatorioRadio != null) {
+            modoAleatorioRadio.setSelected(true);
         }
         if (excluirObligatoriosDelCotejoCheckBox != null) {
             excluirObligatoriosDelCotejoCheckBox.setSelected(false);
@@ -605,7 +627,7 @@ public class PeleasController {
         if (cotejoGuardadoTable != null) {
             cotejoGuardadoTable.getSelectionModel().clearSelection();
         }
-        expandirGallosSinPelea();
+        actualizarExpansionGallosSinPelea();
         if (peleasCotejoTable != null) {
             peleasCotejoTable.getSelectionModel().clearSelection();
         }
@@ -677,15 +699,23 @@ public class PeleasController {
             List<RestriccionPartido> restriccionesPartidos =
                     restriccionPartidoRepository.listarPorEvento(eventoActual.getId());
             gallosEvento.setAll(loadGallosDelEvento(eventoActual));
+            String errorEntradas = validarEntradasAntesDeCotejar(eventoActual, partidos, gallosEvento);
+            if (errorEntradas != null) {
+                shellController.setStatus(errorEntradas);
+                return;
+            }
             ParametrosCotejo parametros = readParametrosCotejo(nombresPartidos, restriccionesPartidos);
             if (parametros == null) {
                 return;
             }
 
-            ResultadoCotejo resultado = motorCotejo.cotejar(loadGallosDelEvento(eventoActual), parametros);
+            List<Gallo> gallosDelEvento = new ArrayList<>(gallosEvento);
+            ResultadoCotejo resultado = motorCotejo.cotejar(gallosDelEvento, parametros);
+            rondaPorGalloId.clear();
+            rondaPorGalloId.putAll(resultado.getRondasPorGalloId());
             List<Pelea> peleasOrdenadas = ordenadorPeleas.ordenar(
                     resultado.getPeleas(),
-                    new ParametrosOrdenamiento(readPartidosPrioritarios(nombresPartidos))
+                    buildParametrosOrdenamiento(partidos, gallosDelEvento)
             );
             peleasCotejo.setAll(peleasOrdenadas);
             gallosSinPelea.setAll(resultado.getGallosSinPelea());
@@ -751,31 +781,119 @@ public class PeleasController {
         return gallosDelEvento;
     }
 
-    private Set<Long> readPartidosPrioritarios(Map<Long, String> nombresPartidos) {
-        Set<Long> partidosPrioritarios = new HashSet<>();
-        if (partidosPrioritariosField == null || nombresPartidos == null) {
-            return partidosPrioritarios;
+    private String validarEntradasAntesDeCotejar(Evento evento, List<Partido> partidosEvento, List<Gallo> gallosDelEvento) {
+        if (evento == null || partidosEvento == null || gallosDelEvento == null) {
+            return null;
         }
+        int gallosPorEntrada = Math.max(1, evento.getGallosPorPartido());
+        int obligatoriosPorEntrada = Math.min(Math.max(0, evento.getGallosObligatorios()), gallosPorEntrada);
+        Map<Long, List<Gallo>> gallosPorPartido = agruparGallosPorPartido(gallosDelEvento);
 
-        String text = partidosPrioritariosField.getText().trim();
-        if (text.isEmpty()) {
-            return partidosPrioritarios;
-        }
-
-        String[] partes = text.split(",");
-        for (String parte : partes) {
-            String nombrePrioritario = parte.trim();
-            if (nombrePrioritario.isEmpty()) {
+        for (Partido partido : partidosEvento) {
+            if (partido == null || partido.getId() == null) {
                 continue;
             }
-            for (Map.Entry<Long, String> entry : nombresPartidos.entrySet()) {
-                if (entry.getValue() != null && entry.getValue().equalsIgnoreCase(nombrePrioritario)) {
-                    partidosPrioritarios.add(entry.getKey());
+            List<Gallo> gallosPartido = gallosPorPartido.get(partido.getId());
+            if (gallosPartido == null || gallosPartido.isEmpty()) {
+                continue;
+            }
+
+            int sobrantes = gallosPartido.size() % gallosPorEntrada;
+            if (sobrantes != 0) {
+                int entrada = (gallosPartido.size() / gallosPorEntrada) + 1;
+                int faltantes = gallosPorEntrada - sobrantes;
+                return "No se puede cotejar: " + nombrePartidoSeguro(partido) +
+                        ", entrada " + entrada + ", necesita " + faltantes +
+                        " gallo" + (faltantes == 1 ? "" : "s") + " mas.";
+            }
+
+            if (obligatoriosPorEntrada > 0) {
+                String errorObligatorios = validarObligatoriosPorEntrada(
+                        partido,
+                        gallosPartido,
+                        gallosPorEntrada,
+                        obligatoriosPorEntrada);
+                if (errorObligatorios != null) {
+                    return errorObligatorios;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Map<Long, List<Gallo>> agruparGallosPorPartido(List<Gallo> gallosDelEvento) {
+        Map<Long, List<Gallo>> gallosPorPartido = new HashMap<>();
+        for (Gallo gallo : gallosDelEvento) {
+            if (gallo == null || gallo.getPartidoId() == null) {
+                continue;
+            }
+            if (!gallosPorPartido.containsKey(gallo.getPartidoId())) {
+                gallosPorPartido.put(gallo.getPartidoId(), new ArrayList<>());
+            }
+            gallosPorPartido.get(gallo.getPartidoId()).add(gallo);
+        }
+        return gallosPorPartido;
+    }
+
+    private String validarObligatoriosPorEntrada(Partido partido,
+                                                 List<Gallo> gallosPartido,
+                                                 int gallosPorEntrada,
+                                                 int obligatoriosPorEntrada) {
+        int entradas = gallosPartido.size() / gallosPorEntrada;
+        for (int entrada = 0; entrada < entradas; entrada++) {
+            int inicio = entrada * gallosPorEntrada;
+            int fin = inicio + gallosPorEntrada;
+            int marcados = 0;
+            for (int i = inicio; i < fin; i++) {
+                if (gallosPartido.get(i).isObligatorio()) {
+                    marcados++;
+                }
+            }
+            if (marcados < obligatoriosPorEntrada) {
+                int faltantes = obligatoriosPorEntrada - marcados;
+                return "No se puede cotejar: " + nombrePartidoSeguro(partido) +
+                        ", entrada " + (entrada + 1) + ", necesita " + faltantes +
+                        " gallo" + (faltantes == 1 ? "" : "s") + " obligatorio" +
+                        (faltantes == 1 ? "" : "s") + ".";
+            }
+        }
+        return null;
+    }
+
+    private String nombrePartidoSeguro(Partido partido) {
+        if (partido == null || partido.getNombre() == null || partido.getNombre().trim().isEmpty()) {
+            return "Partido sin nombre";
+        }
+        return partido.getNombre().trim();
+    }
+
+    private ParametrosOrdenamiento buildParametrosOrdenamiento(List<Partido> partidosEvento, List<Gallo> gallosDelEvento) {
+        Map<Long, PreferenciaOrdenPartido> preferenciasPartidos = new HashMap<>();
+        Map<Long, PreferenciaOrdenGallo> preferenciasGallos = new HashMap<>();
+        Map<Long, Integer> rondasPreferidasGallos = new HashMap<>();
+
+        if (partidosEvento != null) {
+            for (Partido partido : partidosEvento) {
+                if (partido != null && partido.getId() != null
+                        && partido.getPreferenciaOrden() != PreferenciaOrdenPartido.NORMAL) {
+                    preferenciasPartidos.put(partido.getId(), partido.getPreferenciaOrden());
+                }
+            }
+        }
+        if (gallosDelEvento != null) {
+            for (Gallo gallo : gallosDelEvento) {
+                if (gallo == null || gallo.getId() == null
+                        || gallo.getPreferenciaOrden() == PreferenciaOrdenGallo.SIN_PREFERENCIA) {
+                    continue;
+                }
+                preferenciasGallos.put(gallo.getId(), gallo.getPreferenciaOrden());
+                if (gallo.getRondaPreferida() != null) {
+                    rondasPreferidasGallos.put(gallo.getId(), gallo.getRondaPreferida());
                 }
             }
         }
 
-        return partidosPrioritarios;
+        return new ParametrosOrdenamiento(preferenciasPartidos, preferenciasGallos, rondasPreferidasGallos);
     }
 
     private ParametrosCotejo readParametrosCotejo(Map<Long, String> nombresPartidos,
@@ -812,9 +930,13 @@ public class PeleasController {
         if (evento == null) {
             return;
         }
-        if (modoCotejoComboBox != null) {
-            modoCotejoComboBox.getSelectionModel().select(
-                    evento.getModoCotejo() == ModoCotejo.RONDAS ? 1 : 0);
+        if (modoAleatorioRadio != null && modoRondasRadio != null) {
+            boolean porRondas = evento.getGallosPorPartido() > 1 || evento.getModoCotejo() == ModoCotejo.RONDAS;
+            if (porRondas) {
+                modoRondasRadio.setSelected(true);
+            } else {
+                modoAleatorioRadio.setSelected(true);
+            }
         }
         if (excluirObligatoriosDelCotejoCheckBox != null) {
             excluirObligatoriosDelCotejoCheckBox.setSelected(evento.isExcluirObligatoriosDelCotejo());
@@ -829,6 +951,11 @@ public class PeleasController {
 
     private void updateReglasVisibility(Integer gallosPorPartido) {
         boolean mostrar = gallosPorPartido != null && gallosPorPartido > 1;
+        if (reglasCotejoPane != null) {
+            reglasCotejoPane.setVisible(mostrar);
+            reglasCotejoPane.setManaged(mostrar);
+            reglasCotejoPane.setExpanded(mostrar);
+        }
         if (reglasCotejoBox != null) {
             reglasCotejoBox.setVisible(mostrar);
             reglasCotejoBox.setManaged(mostrar);
@@ -836,11 +963,10 @@ public class PeleasController {
     }
 
     private ModoCotejo readModoCotejo() {
-        if (modoCotejoComboBox == null) {
+        if (modoRondasRadio == null) {
             return ModoCotejo.ALEATORIO;
         }
-        String seleccionado = modoCotejoComboBox.getSelectionModel().getSelectedItem();
-        if ("Por rondas".equalsIgnoreCase(seleccionado)) {
+        if (modoRondasRadio.isSelected()) {
             return ModoCotejo.RONDAS;
         }
         return ModoCotejo.ALEATORIO;
@@ -914,7 +1040,8 @@ public class PeleasController {
                     orden,
                     pelea.getGallo1().getId(),
                     pelea.getGallo2().getId(),
-                    pelea.getDiferenciaPeso()
+                    pelea.getDiferenciaPeso(),
+                    pelea.getRonda()
             ));
             orden++;
         }
@@ -924,7 +1051,9 @@ public class PeleasController {
     private List<GalloSinPeleaGuardado> toGallosSinPeleaGuardados(List<Gallo> gallos) {
         List<GalloSinPeleaGuardado> guardados = new ArrayList<>();
         for (Gallo gallo : gallos) {
-            guardados.add(new GalloSinPeleaGuardado(null, null, gallo.getId()));
+            Long galloId = gallo == null ? null : gallo.getId();
+            Integer ronda = galloId == null ? null : rondaPorGalloId.get(galloId);
+            guardados.add(new GalloSinPeleaGuardado(null, null, galloId, ronda == null ? 1 : ronda));
         }
         return guardados;
     }
@@ -956,10 +1085,10 @@ public class PeleasController {
             peleaDetalleDiferenciaLabel.setText(formatearDiferencia(pelea.getDiferenciaPeso()) + " g");
         }
         if (peleaDetallePartido1Label != null) {
-            peleaDetallePartido1Label.setText(nombrePartido(pelea.getGallo1().getPartidoId()));
+            peleaDetallePartido1Label.setText(nombrePartidoConEntrada(pelea.getGallo1()));
         }
         if (peleaDetallePartido2Label != null) {
-            peleaDetallePartido2Label.setText(nombrePartido(pelea.getGallo2().getPartidoId()));
+            peleaDetallePartido2Label.setText(nombrePartidoConEntrada(pelea.getGallo2()));
         }
         configurarComboPelea(peleaDetalleGallo1Combo, pelea.getGallo1());
         configurarComboPelea(peleaDetalleGallo2Combo, pelea.getGallo2());
@@ -972,7 +1101,10 @@ public class PeleasController {
             return;
         }
         if (peleasCotejoTable != null) {
-            peleasCotejoTable.getSelectionModel().select(pelea);
+            int index = peleasCotejo.indexOf(pelea);
+            if (index >= 0 && index < peleasCotejoFilas.size()) {
+                peleasCotejoTable.getSelectionModel().select(index);
+            }
         }
         mostrarDetallePelea(pelea);
     }
@@ -1074,10 +1206,10 @@ public class PeleasController {
         cargarCamposGalloDetalle(1, pelea.getGallo1());
         cargarCamposGalloDetalle(2, pelea.getGallo2());
         if (peleaDetallePartido1Field != null) {
-            peleaDetallePartido1Field.setText(nombrePartido(pelea.getGallo1().getPartidoId()));
+            peleaDetallePartido1Field.setText(nombrePartidoConEntrada(pelea.getGallo1()));
         }
         if (peleaDetallePartido2Field != null) {
-            peleaDetallePartido2Field.setText(nombrePartido(pelea.getGallo2().getPartidoId()));
+            peleaDetallePartido2Field.setText(nombrePartidoConEntrada(pelea.getGallo2()));
         }
     }
 
@@ -1115,7 +1247,7 @@ public class PeleasController {
                 peleaDetalleGallo1AnilloField.setText(valorTexto(gallo.getAnillo()));
             }
             if (peleaDetallePartido1Field != null) {
-                peleaDetallePartido1Field.setText(nombrePartido(gallo.getPartidoId()));
+                peleaDetallePartido1Field.setText(nombrePartidoConEntrada(gallo));
             }
         } else {
             if (peleaDetalleGallo2PesoField != null) {
@@ -1125,7 +1257,7 @@ public class PeleasController {
                 peleaDetalleGallo2AnilloField.setText(valorTexto(gallo.getAnillo()));
             }
             if (peleaDetallePartido2Field != null) {
-                peleaDetallePartido2Field.setText(nombrePartido(gallo.getPartidoId()));
+                peleaDetallePartido2Field.setText(nombrePartidoConEntrada(gallo));
             }
         }
     }
@@ -1284,7 +1416,8 @@ public class PeleasController {
             actualizarPartidoDesdeCampo(gallo1.getPartidoId(), partido1Nombre);
             actualizarPartidoDesdeCampo(gallo2.getPartidoId(), partido2Nombre);
             recargarPartidosEvento();
-            reemplazarPelea(index, crearPelea(gallo1, gallo2));
+            Pelea peleaActual = peleasCotejo.get(index);
+            reemplazarPelea(index, crearPelea(gallo1, gallo2, peleaActual == null ? 1 : peleaActual.getRonda()));
             persistirCotejoEditable("Pelea actualizada.");
         } catch (Exception e) {
             shellController.showError("Error al guardar los cambios de la pelea", e);
@@ -1491,7 +1624,11 @@ public class PeleasController {
     }
 
     private Pelea crearPelea(Gallo gallo1, Gallo gallo2) {
-        return new Pelea(gallo1, gallo2, diferenciaPeso(gallo1, gallo2));
+        return crearPelea(gallo1, gallo2, 1);
+    }
+
+    private Pelea crearPelea(Gallo gallo1, Gallo gallo2, int ronda) {
+        return new Pelea(gallo1, gallo2, diferenciaPeso(gallo1, gallo2), ronda);
     }
 
     private double diferenciaPeso(Gallo gallo1, Gallo gallo2) {
@@ -1529,7 +1666,7 @@ public class PeleasController {
         if (gallo == null) {
             return "-";
         }
-        String partido = nombrePartido(gallo.getPartidoId());
+        String partido = nombrePartidoConEntrada(gallo);
         String anillo = gallo.getAnillo() == null || gallo.getAnillo().trim().isEmpty() ? "-" : gallo.getAnillo().trim();
         return gallo.getId() + " | " + formatearPeso(gallo.getPeso()) + " | " + anillo + " | " + partido;
     }
@@ -1538,9 +1675,34 @@ public class PeleasController {
         if (gallo == null) {
             return "-";
         }
-        String partido = nombrePartido(gallo.getPartidoId());
+        String partido = nombrePartidoConEntrada(gallo);
         String anillo = gallo.getAnillo() == null || gallo.getAnillo().trim().isEmpty() ? "-" : gallo.getAnillo().trim();
         return partido + " | " + formatearPeso(gallo.getPeso()) + " | " + anillo;
+    }
+
+    private String nombrePartidoConEntrada(Gallo gallo) {
+        if (gallo == null) {
+            return "-";
+        }
+        int gallosPorPartido = eventoActual == null ? 0 : eventoActual.getGallosPorPartido();
+        return EntradaGallo.formatearPartidoConEntrada(
+                gallo,
+                nombrePartido(gallo.getPartidoId()),
+                gallosPorPartido,
+                partidoTieneMultiplesEntradas(gallo));
+    }
+
+    private boolean partidoTieneMultiplesEntradas(Gallo gallo) {
+        if (gallo == null || gallo.getPartidoId() == null || eventoActual == null || eventoActual.getGallosPorPartido() <= 0) {
+            return false;
+        }
+        int gallosDelPartido = 0;
+        for (Gallo galloEvento : gallosEvento) {
+            if (galloEvento != null && gallo.getPartidoId().equals(galloEvento.getPartidoId())) {
+                gallosDelPartido++;
+            }
+        }
+        return gallosDelPartido > eventoActual.getGallosPorPartido();
     }
 
     private void calcularRondasGallosEvento() {
@@ -1560,10 +1722,10 @@ public class PeleasController {
         return String.format(java.util.Locale.US, "%.1f", peso);
     }
 
-    private TableRow<Pelea> crearFilaArrastrable() {
-        TableRow<Pelea> row = new TableRow<Pelea>() {
+    private TableRow<PeleaFila> crearFilaArrastrable() {
+        TableRow<PeleaFila> row = new TableRow<PeleaFila>() {
             @Override
-            protected void updateItem(Pelea item, boolean empty) {
+            protected void updateItem(PeleaFila item, boolean empty) {
                 super.updateItem(item, empty);
                 setDropIndicators(this, false, false);
             }
@@ -1610,7 +1772,8 @@ public class PeleasController {
 
         row.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2 && !row.isEmpty()) {
-                abrirDetallePelea(row.getItem());
+                PeleaFila fila = row.getItem();
+                abrirDetallePelea(fila == null ? null : fila.getPelea());
                 event.consume();
             }
         });
@@ -1657,14 +1820,14 @@ public class PeleasController {
         return boton;
     }
 
-    private void setDragActive(TableRow<Pelea> row, boolean active) {
+    private void setDragActive(TableRow<PeleaFila> row, boolean active) {
         if (row == null) {
             return;
         }
         row.pseudoClassStateChanged(DRAG_ACTIVE, active);
     }
 
-    private void setDropIndicators(TableRow<Pelea> row, boolean top, boolean bottom) {
+    private void setDropIndicators(TableRow<PeleaFila> row, boolean top, boolean bottom) {
         if (row == null) {
             return;
         }
@@ -1698,6 +1861,32 @@ public class PeleasController {
         persistirCotejoEditable("Orden de pelea actualizado.");
     }
 
+    private void rebuildPeleasCotejoFilas() {
+        List<PeleaFila> filas = new ArrayList<>();
+        for (Pelea pelea : peleasCotejo) {
+            filas.add(new PeleaFila(pelea, pelea == null ? 1 : pelea.getRonda()));
+        }
+        peleasCotejoFilas.setAll(filas);
+    }
+
+    private static final class PeleaFila {
+        private final Pelea pelea;
+        private final int numeroRondaMostrada;
+
+        private PeleaFila(Pelea pelea, int numeroRondaMostrada) {
+            this.pelea = pelea;
+            this.numeroRondaMostrada = numeroRondaMostrada;
+        }
+
+        private Pelea getPelea() {
+            return pelea;
+        }
+
+        private int getNumeroRondaMostrada() {
+            return numeroRondaMostrada;
+        }
+    }
+
     private void cargarCotejoSeleccionadoEnTablaPrincipal() {
         CotejoGuardado selectedCotejo = getCotejoSeleccionado();
         if (selectedCotejo == null) {
@@ -1714,6 +1903,7 @@ public class PeleasController {
 
             List<Pelea> peleasCargadas = toPeleasDesdeGuardado(detalle.getPeleas());
             List<Gallo> gallosSinPeleaCargados = toGallosSinPeleaDesdeGuardado(detalle.getGallosSinPelea());
+            cargarRondasDesdeCotejoGuardado(detalle);
             peleasCotejo.setAll(peleasCargadas);
             gallosSinPelea.setAll(gallosSinPeleaCargados);
             cotejoEditableActual = detalle;
@@ -1744,9 +1934,32 @@ public class PeleasController {
             if (gallo1 == null || gallo2 == null) {
                 throw new IllegalStateException("No se pudo reconstruir una pelea guardada por datos faltantes.");
             }
-            peleas.add(new Pelea(gallo1, gallo2, peleaGuardada.getDiferenciaPeso()));
+            peleas.add(new Pelea(gallo1, gallo2, peleaGuardada.getDiferenciaPeso(), peleaGuardada.getRonda()));
         }
         return peleas;
+    }
+
+    private void cargarRondasDesdeCotejoGuardado(CotejoGuardado detalle) {
+        rondaPorGalloId.clear();
+        if (detalle == null) {
+            return;
+        }
+        for (PeleaGuardada pelea : detalle.getPeleas()) {
+            if (pelea == null) {
+                continue;
+            }
+            if (pelea.getGallo1Id() != null) {
+                rondaPorGalloId.put(pelea.getGallo1Id(), pelea.getRonda());
+            }
+            if (pelea.getGallo2Id() != null) {
+                rondaPorGalloId.put(pelea.getGallo2Id(), pelea.getRonda());
+            }
+        }
+        for (GalloSinPeleaGuardado galloSinPelea : detalle.getGallosSinPelea()) {
+            if (galloSinPelea != null && galloSinPelea.getGalloId() != null) {
+                rondaPorGalloId.put(galloSinPelea.getGalloId(), galloSinPelea.getRonda());
+            }
+        }
     }
 
     private List<Gallo> toGallosSinPeleaDesdeGuardado(List<GalloSinPeleaGuardado> guardados) throws Exception {

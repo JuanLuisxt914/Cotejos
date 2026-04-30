@@ -1,12 +1,16 @@
 package com.cotejador.app.core.cotejo;
 
 import com.cotejador.app.core.model.Gallo;
+import com.cotejador.app.core.model.PreferenciaOrdenGallo;
+import com.cotejador.app.core.model.PreferenciaOrdenPartido;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -58,6 +62,43 @@ public class OrdenadorPeleasTest {
         );
 
         assertSame(prioritaria, ordenadas.get(0));
+    }
+
+    @Test
+    public void mandaPartidosMarcadosComoUltimasAlFinal() {
+        Pelea ultima = pelea(1L, 10L, 2L, 20L);
+        Pelea normal = pelea(3L, 30L, 4L, 40L);
+        Map<Long, PreferenciaOrdenPartido> preferencias = new HashMap<Long, PreferenciaOrdenPartido>();
+        preferencias.put(10L, PreferenciaOrdenPartido.ULTIMAS);
+
+        List<Pelea> ordenadas = ordenadorPeleas.ordenar(
+                Arrays.asList(ultima, normal),
+                new ParametrosOrdenamiento(preferencias,
+                        Collections.<Long, PreferenciaOrdenGallo>emptyMap(),
+                        Collections.<Long, Integer>emptyMap(),
+                        1L)
+        );
+
+        assertSame(normal, ordenadas.get(0));
+        assertSame(ultima, ordenadas.get(1));
+    }
+
+    @Test
+    public void priorizaGalloMarcadoParaPrimeraRonda() {
+        Pelea normal = pelea(1L, 10L, 2L, 20L);
+        Pelea primera = pelea(3L, 30L, 4L, 40L);
+        Map<Long, PreferenciaOrdenGallo> preferenciasGallos = new HashMap<Long, PreferenciaOrdenGallo>();
+        preferenciasGallos.put(3L, PreferenciaOrdenGallo.PRIMERA_RONDA);
+
+        List<Pelea> ordenadas = ordenadorPeleas.ordenar(
+                Arrays.asList(normal, primera),
+                new ParametrosOrdenamiento(Collections.<Long, PreferenciaOrdenPartido>emptyMap(),
+                        preferenciasGallos,
+                        Collections.<Long, Integer>emptyMap(),
+                        1L)
+        );
+
+        assertSame(primera, ordenadas.get(0));
     }
 
     @Test

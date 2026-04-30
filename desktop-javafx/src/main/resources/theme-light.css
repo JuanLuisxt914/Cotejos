@@ -148,7 +148,12 @@
     -fx-background-radius: 14;
     -fx-border-color: rgba(83, 95, 112, 0.12);
     -fx-border-radius: 14;
-    -fx-padding: 12;
+    -fx-padding: 18 14 18 14;
+}
+
+.fight-rules-pane .label,
+.fight-rules-pane .check-box {
+    -fx-padding: 4 0 4 0;
 }
 
 .section-title {
@@ -506,6 +511,66 @@
     -fx-background-color: linear-gradient(to right, rgba(0, 97, 164, 0.14), rgba(0, 97, 164, 0.06));
 }
 
+.fight-table .table-row-cell.entrada-color-1 {
+    -fx-background-color: rgba(0, 97, 164, 0.045);
+}
+
+.fight-table .table-row-cell.entrada-color-2 {
+    -fx-background-color: rgba(43, 122, 80, 0.055);
+}
+
+.fight-table .table-row-cell.entrada-color-3 {
+    -fx-background-color: rgba(155, 107, 44, 0.055);
+}
+
+.fight-table .table-row-cell.entrada-color-4 {
+    -fx-background-color: rgba(98, 87, 158, 0.050);
+}
+
+.fight-table .table-row-cell.entrada-color-1:hover,
+.fight-table .table-row-cell.entrada-color-2:hover,
+.fight-table .table-row-cell.entrada-color-3:hover,
+.fight-table .table-row-cell.entrada-color-4:hover {
+    -fx-background-color: rgba(0, 97, 164, 0.08);
+}
+
+.fight-table .table-row-cell.entrada-color-1:filled:selected,
+.fight-table .table-row-cell.entrada-color-2:filled:selected,
+.fight-table .table-row-cell.entrada-color-3:filled:selected,
+.fight-table .table-row-cell.entrada-color-4:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(0, 97, 164, 0.18), rgba(0, 97, 164, 0.08));
+}
+
+.fight-table .table-row-cell.partido-color-1 {
+    -fx-background-color: rgba(0, 97, 164, 0.045);
+}
+
+.fight-table .table-row-cell.partido-color-2 {
+    -fx-background-color: rgba(43, 122, 80, 0.055);
+}
+
+.fight-table .table-row-cell.partido-color-3 {
+    -fx-background-color: rgba(155, 107, 44, 0.055);
+}
+
+.fight-table .table-row-cell.partido-color-4 {
+    -fx-background-color: rgba(98, 87, 158, 0.050);
+}
+
+.fight-table .table-row-cell.partido-color-1:hover,
+.fight-table .table-row-cell.partido-color-2:hover,
+.fight-table .table-row-cell.partido-color-3:hover,
+.fight-table .table-row-cell.partido-color-4:hover {
+    -fx-background-color: rgba(0, 97, 164, 0.08);
+}
+
+.fight-table .table-row-cell.partido-color-1:filled:selected,
+.fight-table .table-row-cell.partido-color-2:filled:selected,
+.fight-table .table-row-cell.partido-color-3:filled:selected,
+.fight-table .table-row-cell.partido-color-4:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(0, 97, 164, 0.18), rgba(0, 97, 164, 0.08));
+}
+
 .fight-table .table-row-cell:drag-active {
     -fx-background-color: linear-gradient(to right, rgba(0, 97, 164, 0.20), rgba(0, 97, 164, 0.08));
     -fx-effect: dropshadow(gaussian, rgba(83, 95, 112, 0.18), 18, 0.22, 0, 4);
@@ -531,6 +596,14 @@
 
 .fight-table .table-column {
     -fx-alignment: CENTER_LEFT;
+}
+
+.fight-table .check-box,
+.fight-table .check-box .text,
+.fight-table .table-row-cell:filled:selected .check-box,
+.fight-table .table-row-cell:filled:selected .check-box .text {
+    -fx-text-fill: #191C1E;
+    -fx-fill: #191C1E;
 }
 
 .fight-card {

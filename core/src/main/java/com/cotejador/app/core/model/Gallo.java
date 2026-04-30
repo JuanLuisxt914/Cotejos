@@ -6,6 +6,9 @@ public class Gallo {
     private String anillo;
     private Long partidoId;
     private boolean obligatorio;
+    private int ordenRegistro;
+    private PreferenciaOrdenGallo preferenciaOrden;
+    private Integer rondaPreferida;
 
     public Gallo() {
     }
@@ -16,6 +19,7 @@ public class Gallo {
         this.anillo = anillo;
         this.partidoId = partidoId;
         this.obligatorio = false;
+        this.ordenRegistro = 0;
     }
 
     public Gallo(Long id, double peso, String anillo, Long partidoId, boolean obligatorio) {
@@ -24,6 +28,24 @@ public class Gallo {
         this.anillo = anillo;
         this.partidoId = partidoId;
         this.obligatorio = obligatorio;
+        this.ordenRegistro = 0;
+    }
+
+    public Gallo(Long id, double peso, String anillo, Long partidoId, boolean obligatorio, int ordenRegistro) {
+        this(id, peso, anillo, partidoId, obligatorio, ordenRegistro,
+                PreferenciaOrdenGallo.SIN_PREFERENCIA, null);
+    }
+
+    public Gallo(Long id, double peso, String anillo, Long partidoId, boolean obligatorio, int ordenRegistro,
+                 PreferenciaOrdenGallo preferenciaOrden, Integer rondaPreferida) {
+        this.id = id;
+        this.peso = peso;
+        this.anillo = anillo;
+        this.partidoId = partidoId;
+        this.obligatorio = obligatorio;
+        this.ordenRegistro = ordenRegistro;
+        this.preferenciaOrden = preferenciaOrden == null ? PreferenciaOrdenGallo.SIN_PREFERENCIA : preferenciaOrden;
+        this.rondaPreferida = rondaPreferida;
     }
 
     public Long getId() {
@@ -66,9 +88,35 @@ public class Gallo {
         this.obligatorio = obligatorio;
     }
 
+    public int getOrdenRegistro() {
+        return ordenRegistro;
+    }
+
+    public void setOrdenRegistro(int ordenRegistro) {
+        this.ordenRegistro = ordenRegistro;
+    }
+
+    public PreferenciaOrdenGallo getPreferenciaOrden() {
+        return preferenciaOrden == null ? PreferenciaOrdenGallo.SIN_PREFERENCIA : preferenciaOrden;
+    }
+
+    public void setPreferenciaOrden(PreferenciaOrdenGallo preferenciaOrden) {
+        this.preferenciaOrden = preferenciaOrden == null ? PreferenciaOrdenGallo.SIN_PREFERENCIA : preferenciaOrden;
+    }
+
+    public Integer getRondaPreferida() {
+        return rondaPreferida;
+    }
+
+    public void setRondaPreferida(Integer rondaPreferida) {
+        this.rondaPreferida = rondaPreferida;
+    }
+
     @Override
     public String toString() {
         return "ID " + id + " | " + peso + " | " + anillo +
+                " | orden " + ordenRegistro +
+                " | " + getPreferenciaOrden().getEtiqueta() +
                 (obligatorio ? " | obligatorio" : "");
     }
 }

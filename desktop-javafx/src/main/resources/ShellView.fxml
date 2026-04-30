@@ -39,6 +39,10 @@
                         <Label fx:id="eventDateLabel" styleClass="event-info-value" text="-" />
                         <Label styleClass="event-info-label" text="Gallos por partido:" />
                         <Label fx:id="eventGallosLabel" styleClass="event-info-value" text="-" />
+                        <Label styleClass="event-info-label" text="Partidos:" />
+                        <Label fx:id="eventTotalPartidosLabel" styleClass="event-info-value" text="-" />
+                        <Label styleClass="event-info-label" text="Entradas totales:" />
+                        <Label fx:id="eventPartidosLabel" styleClass="event-info-value" text="-" />
                         <Label styleClass="event-info-label" text="Modo:" />
                         <Label fx:id="eventModeLabel" styleClass="event-info-value" text="-" />
                     </HBox>

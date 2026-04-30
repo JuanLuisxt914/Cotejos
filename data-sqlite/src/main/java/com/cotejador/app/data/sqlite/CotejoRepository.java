@@ -17,9 +17,9 @@ public class CotejoRepository {
             "INSERT INTO cotejos (evento_id, tolerancia_gramos, fecha_generacion) VALUES (?, ?, ?)";
     private static final String INSERT_PELEA =
             "INSERT INTO peleas_generadas " +
-                    "(cotejo_id, orden, gallo_1_id, gallo_2_id, diferencia_peso) VALUES (?, ?, ?, ?, ?)";
+                    "(cotejo_id, orden, ronda, gallo_1_id, gallo_2_id, diferencia_peso) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String INSERT_GALLO_SIN_PELEA =
-            "INSERT INTO gallos_sin_pelea (cotejo_id, gallo_id) VALUES (?, ?)";
+            "INSERT INTO gallos_sin_pelea (cotejo_id, gallo_id, ronda) VALUES (?, ?, ?)";
     private static final String UPDATE_COTEJO =
             "UPDATE cotejos SET evento_id = ?, tolerancia_gramos = ?, fecha_generacion = ? WHERE id = ?";
     private static final String SELECT_COTEJOS_BY_EVENTO =
@@ -28,10 +28,10 @@ public class CotejoRepository {
     private static final String SELECT_COTEJO_BY_ID =
             "SELECT id, evento_id, tolerancia_gramos, fecha_generacion FROM cotejos WHERE id = ?";
     private static final String SELECT_PELEAS_BY_COTEJO =
-            "SELECT id, cotejo_id, orden, gallo_1_id, gallo_2_id, diferencia_peso " +
+            "SELECT id, cotejo_id, orden, ronda, gallo_1_id, gallo_2_id, diferencia_peso " +
                     "FROM peleas_generadas WHERE cotejo_id = ? ORDER BY orden";
     private static final String SELECT_GALLOS_SIN_PELEA_BY_COTEJO =
-            "SELECT id, cotejo_id, gallo_id FROM gallos_sin_pelea WHERE cotejo_id = ? ORDER BY id";
+            "SELECT id, cotejo_id, gallo_id, ronda FROM gallos_sin_pelea WHERE cotejo_id = ? ORDER BY id";
     private static final String DELETE_COTEJO =
             "DELETE FROM cotejos WHERE id = ?";
 
@@ -174,9 +174,10 @@ public class CotejoRepository {
             for (PeleaGuardada pelea : cotejo.getPeleas()) {
                 statement.setLong(1, cotejo.getId());
                 statement.setInt(2, pelea.getOrden());
-                statement.setLong(3, pelea.getGallo1Id());
-                statement.setLong(4, pelea.getGallo2Id());
-                statement.setDouble(5, pelea.getDiferenciaPeso());
+                statement.setInt(3, pelea.getRonda());
+                statement.setLong(4, pelea.getGallo1Id());
+                statement.setLong(5, pelea.getGallo2Id());
+                statement.setDouble(6, pelea.getDiferenciaPeso());
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -188,6 +189,7 @@ public class CotejoRepository {
             for (GalloSinPeleaGuardado gallo : cotejo.getGallosSinPelea()) {
                 statement.setLong(1, cotejo.getId());
                 statement.setLong(2, gallo.getGalloId());
+                statement.setInt(3, gallo.getRonda());
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -209,7 +211,8 @@ public class CotejoRepository {
                             resultSet.getInt("orden"),
                             resultSet.getLong("gallo_1_id"),
                             resultSet.getLong("gallo_2_id"),
-                            resultSet.getDouble("diferencia_peso")
+                            resultSet.getDouble("diferencia_peso"),
+                            resultSet.getInt("ronda")
                     ));
                 }
             }
@@ -230,7 +233,8 @@ public class CotejoRepository {
                     gallos.add(new GalloSinPeleaGuardado(
                             resultSet.getLong("id"),
                             resultSet.getLong("cotejo_id"),
-                            resultSet.getLong("gallo_id")
+                            resultSet.getLong("gallo_id"),
+                            resultSet.getInt("ronda")
                     ));
                 }
             }

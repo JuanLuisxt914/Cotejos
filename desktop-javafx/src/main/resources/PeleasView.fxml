@@ -11,6 +11,8 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.SplitPane?>
@@ -55,25 +57,39 @@
                                      editable="false"
                                      accessibleText="Campo de tolerancia en gramos"/>
 
-                            <Label text="Partidos prioritarios" labelFor="$partidosPrioritariosField" styleClass="generation-label"/>
-                            <TextField fx:id="partidosPrioritariosField"
-                                       promptText="Partidos prioritarios separados por coma"
-                                       accessibleText="Campo de partidos prioritarios separados por coma"/>
+                            <TitledPane fx:id="reglasCotejoPane"
+                                        text="Forma de generar peleas"
+                                        expanded="false"
+                                        styleClass="fight-rules-pane">
+                                <content>
+                                    <VBox fx:id="reglasCotejoBox" spacing="16" styleClass="fight-rules-box">
+                                        <Label text="Modo de generación" styleClass="generation-label"/>
+                                        <HBox spacing="12">
+                                            <children>
+                                                <RadioButton fx:id="modoAleatorioRadio"
+                                                             text="Aleatorio"
+                                                             accessibleText="Modo aleatorio del cotejo">
+                                                    <toggleGroup>
+                                                        <ToggleGroup fx:id="modoCotejoToggleGroup"/>
+                                                    </toggleGroup>
+                                                </RadioButton>
+                                                <RadioButton fx:id="modoRondasRadio"
+                                                             text="Por rondas"
+                                                             accessibleText="Modo por rondas del cotejo"
+                                                             toggleGroup="$modoCotejoToggleGroup"/>
+                                            </children>
+                                        </HBox>
 
-                            <VBox fx:id="reglasCotejoBox" spacing="8" styleClass="fight-rules-box">
-                                <Label text="Forma de generar peleas" styleClass="section-title"/>
-                                <Label text="Modo de generación" labelFor="$modoCotejoComboBox"/>
-                                <ComboBox fx:id="modoCotejoComboBox"
-                                          accessibleText="Modo de generación del cotejo"/>
+                                        <CheckBox fx:id="ultimaRondaSoloObligatoriosCheckBox"
+                                                  text="La última ronda solo coteja obligatorios"
+                                                  accessibleText="Hacer que la última ronda solo considere gallos obligatorios"/>
 
-                                <CheckBox fx:id="ultimaRondaSoloObligatoriosCheckBox"
-                                          text="La última ronda solo coteja obligatorios"
-                                          accessibleText="Hacer que la última ronda solo considere gallos obligatorios"/>
-
-                                <CheckBox fx:id="excluirObligatoriosDelCotejoCheckBox"
-                                          text="Excluir gallo obligatorio del cotejo"
-                                          accessibleText="Excluir el gallo obligatorio para revisión manual"/>
-                            </VBox>
+                                        <CheckBox fx:id="excluirObligatoriosDelCotejoCheckBox"
+                                                  text="Excluir gallo obligatorio del cotejo"
+                                                  accessibleText="Excluir el gallo obligatorio para revisión manual"/>
+                                    </VBox>
+                                </content>
+                            </TitledPane>
 
                             <Button text="Cotejar"
                                     onAction="#cotejarEvento"
@@ -85,7 +101,7 @@
 
                         <Accordion VBox.vgrow="ALWAYS">
                             <panes>
-                                <TitledPane fx:id="gallosSinPeleaPane" text="Gallos sin pelea" expanded="true">
+                                <TitledPane fx:id="gallosSinPeleaPane" text="Gallos sin pelea" expanded="false">
                                     <content>
                                         <VBox spacing="8">
                                             <Label text="Gallos que aún no quedaron asignados a una pelea."
@@ -261,6 +277,7 @@
                             <Label fx:id="opcionesImpresionTituloLabel"
                                    text="Imprimir:"
                                    styleClass="fight-panel-note"/>
+                            <Region HBox.hgrow="ALWAYS"/>
                             <Button text="Publico"
                                     onAction="#imprimirHojaPublico"
                                     styleClass="primary-action"
@@ -277,7 +294,6 @@
                                     onAction="#imprimirListaPartidos"
                                     styleClass="primary-action"
                                     style="-fx-padding: 8 16;"/>
-                            <Region HBox.hgrow="ALWAYS"/>
                             <Button text="✕"
                                     onAction="#cerrarPanelOpcionesImpresion"
                                     styleClass="secondary-action"
@@ -293,6 +309,7 @@
                                    accessibleText="Tabla de peleas generadas">
                             <columns>
                                 <TableColumn fx:id="peleaNumeroColumn" text="#" prefWidth="42.0" minWidth="42.0" maxWidth="42.0"/>
+                                <TableColumn fx:id="peleaRondaColumn" text="Ronda" prefWidth="62.0" minWidth="62.0" maxWidth="62.0"/>
                                 <TableColumn fx:id="peleaGallo1Column" text="Anillo 1" prefWidth="84.0" minWidth="84.0" maxWidth="84.0"/>
                                 <TableColumn fx:id="peleaPeso1Column" text="Peso 1" prefWidth="64.0" minWidth="64.0" maxWidth="64.0"/>
                                 <TableColumn fx:id="peleaGallo2Column" text="Anillo 2" prefWidth="84.0" minWidth="84.0" maxWidth="84.0"/>

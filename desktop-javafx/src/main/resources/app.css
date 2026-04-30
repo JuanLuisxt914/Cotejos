@@ -240,6 +240,31 @@
     -fx-padding: 12 0 0 0;
 }
 
+.fight-view .fight-rules-pane .label,
+.fight-view .fight-rules-pane .check-box,
+.fight-view .fight-rules-pane > .title > .text {
+    -fx-text-fill: #ffffff;
+}
+
+.fight-view .fight-rules-pane .check-box .text,
+.fight-view .fight-rules-pane .label .text {
+    -fx-fill: #ffffff;
+}
+
+.fight-view .fight-rules-pane .check-box:disabled,
+.fight-view .fight-rules-pane .label:disabled,
+.fight-view .fight-rules-pane .combo-box-base:disabled {
+    -fx-opacity: 1.0;
+}
+
+.fight-view .fight-rules-pane .check-box:disabled .text,
+.fight-view .fight-rules-pane .label:disabled .text,
+.fight-view .fight-rules-pane .combo-box-base:disabled,
+.fight-view .fight-rules-pane .combo-box-base:disabled .text {
+    -fx-fill: #ffffff;
+    -fx-text-fill: #ffffff;
+}
+
 .fight-detail-grid .label {
     -fx-font-weight: 600;
 }

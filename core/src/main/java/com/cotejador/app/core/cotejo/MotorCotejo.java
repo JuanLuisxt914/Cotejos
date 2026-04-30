@@ -46,14 +46,15 @@ public class MotorCotejo {
         List<Pelea> peleas = new ArrayList<Pelea>();
         Set<Gallo> gallosUsados = new HashSet<Gallo>();
         Set<Long> galloIdsUsados = new HashSet<Long>();
+        Map<Long, Integer> rondasPorGalloId = construirRondasAleatorias(candidatosOrdenados);
 
-        cotejarLista(regulares, peleas, gallosUsados, galloIdsUsados, parametros);
+        cotejarLista(regulares, peleas, gallosUsados, galloIdsUsados, parametros, 1);
 
         if (!parametros.isExcluirObligatoriosDelCotejo() && parametros.isUltimaRondaSoloObligatorios()) {
-            cotejarLista(obligatorios, peleas, gallosUsados, galloIdsUsados, parametros);
+            cotejarLista(obligatorios, peleas, gallosUsados, galloIdsUsados, parametros, 1);
         }
 
-        return construirResultado(candidatosOrdenados, peleas, gallosUsados, galloIdsUsados);
+        return construirResultado(candidatosOrdenados, peleas, gallosUsados, galloIdsUsados, rondasPorGalloId);
     }
 
     private ResultadoCotejo cotejarPorRondas(List<Gallo> candidatosOrdenados, ParametrosCotejo parametros) {
@@ -71,21 +72,24 @@ public class MotorCotejo {
         List<Pelea> peleas = new ArrayList<Pelea>();
         Set<Gallo> gallosUsados = new HashSet<Gallo>();
         Set<Long> galloIdsUsados = new HashSet<Long>();
+        Map<Long, Integer> rondasPorGalloId = new HashMap<Long, Integer>();
 
-        cotejarEnRondas(regulares, peleas, gallosUsados, galloIdsUsados, parametros);
+        int siguienteRonda = cotejarEnRondas(regulares, peleas, gallosUsados, galloIdsUsados, parametros, rondasPorGalloId, 1);
 
         if (!parametros.isExcluirObligatoriosDelCotejo() && parametros.isUltimaRondaSoloObligatorios()) {
-            cotejarEnRondas(obligatorios, peleas, gallosUsados, galloIdsUsados, parametros);
+            cotejarEnRondas(obligatorios, peleas, gallosUsados, galloIdsUsados, parametros, rondasPorGalloId, siguienteRonda);
         }
 
-        return construirResultado(candidatosOrdenados, peleas, gallosUsados, galloIdsUsados);
+        return construirResultado(candidatosOrdenados, peleas, gallosUsados, galloIdsUsados, rondasPorGalloId);
     }
 
-    private void cotejarEnRondas(List<Gallo> candidatos,
+    private int cotejarEnRondas(List<Gallo> candidatos,
                                  List<Pelea> peleas,
                                  Set<Gallo> gallosUsados,
                                  Set<Long> galloIdsUsados,
-                                 ParametrosCotejo parametros) {
+                                 ParametrosCotejo parametros,
+                                 Map<Long, Integer> rondasPorGalloId,
+                                 int rondaInicial) {
         Map<Long, List<Gallo>> gallosPorPartido = agruparPorPartido(candidatos);
         List<Long> partidosOrdenados = new ArrayList<Long>(gallosPorPartido.keySet());
         Collections.sort(partidosOrdenados);
@@ -93,11 +97,14 @@ public class MotorCotejo {
         List<List<Gallo>> rondas = construirRondas(gallosPorPartido, partidosOrdenados);
         int numeroRonda = 0;
         for (List<Gallo> ronda : rondas) {
+            int rondaReal = rondaInicial + numeroRonda;
+            registrarRonda(ronda, rondasPorGalloId, rondaReal);
             List<Gallo> rondaMezclada = new ArrayList<Gallo>(ronda);
             Collections.shuffle(rondaMezclada, new java.util.Random(31L + numeroRonda));
-            cotejarLista(rondaMezclada, peleas, gallosUsados, galloIdsUsados, parametros);
+            cotejarLista(rondaMezclada, peleas, gallosUsados, galloIdsUsados, parametros, rondaReal);
             numeroRonda++;
         }
+        return rondaInicial + rondas.size();
     }
 
     private List<List<Gallo>> construirRondas(Map<Long, List<Gallo>> gallosPorPartido, List<Long> partidosOrdenados) {
@@ -143,14 +150,35 @@ public class MotorCotejo {
     private ResultadoCotejo construirResultado(List<Gallo> candidatosOrdenados,
                                                 List<Pelea> peleas,
                                                 Set<Gallo> gallosUsados,
-                                                Set<Long> galloIdsUsados) {
+                                                Set<Long> galloIdsUsados,
+                                                Map<Long, Integer> rondasPorGalloId) {
         List<Gallo> gallosSinPelea = new ArrayList<Gallo>();
         for (Gallo gallo : candidatosOrdenados) {
             if (!estaUsado(gallo, gallosUsados, galloIdsUsados)) {
                 gallosSinPelea.add(gallo);
             }
         }
-        return new ResultadoCotejo(peleas, gallosSinPelea);
+        return new ResultadoCotejo(peleas, gallosSinPelea, rondasPorGalloId);
+    }
+
+    private Map<Long, Integer> construirRondasAleatorias(List<Gallo> candidatosOrdenados) {
+        Map<Long, Integer> rondasPorGalloId = new HashMap<Long, Integer>();
+        for (Gallo gallo : candidatosOrdenados) {
+            registrarRonda(gallo, rondasPorGalloId, 1);
+        }
+        return rondasPorGalloId;
+    }
+
+    private void registrarRonda(List<Gallo> gallos, Map<Long, Integer> rondasPorGalloId, int ronda) {
+        for (Gallo gallo : gallos) {
+            registrarRonda(gallo, rondasPorGalloId, ronda);
+        }
+    }
+
+    private void registrarRonda(Gallo gallo, Map<Long, Integer> rondasPorGalloId, int ronda) {
+        if (gallo != null && gallo.getId() != null) {
+            rondasPorGalloId.put(gallo.getId(), ronda);
+        }
     }
 
     private List<Gallo> ordenarGallosPorPeso(List<Gallo> gallos) {
@@ -183,7 +211,8 @@ public class MotorCotejo {
                               List<Pelea> peleas,
                               Set<Gallo> gallosUsados,
                               Set<Long> galloIdsUsados,
-                              ParametrosCotejo parametros) {
+                              ParametrosCotejo parametros,
+                              int ronda) {
         for (Gallo gallo : candidatos) {
             if (estaUsado(gallo, gallosUsados, galloIdsUsados)) {
                 continue;
@@ -195,7 +224,7 @@ public class MotorCotejo {
                 gallosUsados.add(mejorRival);
                 registrarIdUsado(gallo, galloIdsUsados);
                 registrarIdUsado(mejorRival, galloIdsUsados);
-                peleas.add(new Pelea(gallo, mejorRival, diferenciaPeso(gallo, mejorRival)));
+                peleas.add(new Pelea(gallo, mejorRival, diferenciaPeso(gallo, mejorRival), ronda));
             }
         }
     }
