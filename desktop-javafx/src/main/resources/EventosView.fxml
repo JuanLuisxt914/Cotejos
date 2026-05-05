@@ -48,6 +48,7 @@
 
         <VBox maxWidth="Infinity" spacing="8" styleClass="events-list-panel" GridPane.columnIndex="1">
             <Label styleClass="section-title" text="Listado de eventos" />
+            <Label styleClass="view-subtitle" text="Doble clic para ingresar al evento" />
             <ListView fx:id="eventoList" accessibleText="Lista de eventos" maxWidth="Infinity" VBox.vgrow="ALWAYS">
             </ListView>
         </VBox>

@@ -208,6 +208,7 @@ public class RegistroController {
             loadPartidos(partido.getId());
             if (shellController != null) {
                 shellController.refrescarPartidosEnPeleas();
+                shellController.refrescarInfoEventoActual();
             }
             clearPartidoFields();
             shellController.setStatus("Partido agregado.");
@@ -258,6 +259,7 @@ public class RegistroController {
             loadPartidos(null);
             if (shellController != null) {
                 shellController.refrescarPartidosEnPeleas();
+                shellController.refrescarInfoEventoActual();
             }
             gallos.clear();
             clearPartidoFields();
@@ -281,6 +283,9 @@ public class RegistroController {
 
             galloRepository.insertar(gallo);
             loadGallos(selectedPartido.getId(), gallo.getId());
+            if (shellController != null) {
+                shellController.refrescarInfoEventoActual();
+            }
             clearGalloFields();
             shellController.setStatus("Gallo agregado.");
             focusGalloPeso();
@@ -337,6 +342,9 @@ public class RegistroController {
 
             galloRepository.eliminar(selectedGallo.getId());
             loadGallos(selectedPartido.getId(), null);
+            if (shellController != null) {
+                shellController.refrescarInfoEventoActual();
+            }
             clearGalloFields();
             shellController.setStatus("Gallo eliminado.");
         } catch (Exception e) {
@@ -780,6 +788,9 @@ public class RegistroController {
             }
             galloRepository.eliminar(gallo.getId());
             loadGallos(selectedPartido.getId(), null);
+            if (shellController != null) {
+                shellController.refrescarInfoEventoActual();
+            }
             clearGalloFields();
             shellController.setStatus("Gallo eliminado.");
         } catch (Exception e) {
@@ -800,6 +811,7 @@ public class RegistroController {
             clearGalloFields();
             if (shellController != null) {
                 shellController.refrescarPartidosEnPeleas();
+                shellController.refrescarInfoEventoActual();
             }
             shellController.setStatus("Partido eliminado.");
         } catch (Exception e) {
@@ -884,10 +896,26 @@ public class RegistroController {
         if (partidoNombreColumn != null) {
             partidoNombreColumn.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(safeText(cellData.getValue().getNombre())));
             partidoNombreColumn.setMinWidth(150.0);
+            partidoNombreColumn.setPrefWidth(220.0);
+            partidoNombreColumn.setCellFactory(column -> new TableCell<Partido, String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                        setGraphic(null);
+                        return;
+                    }
+                    setText(item);
+                    setStyle("-fx-font-size: 16px; -fx-font-weight: 700;");
+                }
+            });
         }
         if (partidoOrdenColumn != null) {
-            partidoOrdenColumn.setMinWidth(150.0);
+            partidoOrdenColumn.setResizable(false);
+            partidoOrdenColumn.setMinWidth(170.0);
             partidoOrdenColumn.setPrefWidth(170.0);
+            partidoOrdenColumn.setMaxWidth(170.0);
             partidoOrdenColumn.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
             partidoOrdenColumn.setCellFactory(column -> new TableCell<Partido, Partido>() {
                 private final ComboBox<PreferenciaOrdenPartido> ordenCombo =
@@ -924,7 +952,10 @@ public class RegistroController {
             });
         }
         if (partidoAccionesColumn != null) {
-            partidoAccionesColumn.setMinWidth(130.0);
+            partidoAccionesColumn.setResizable(false);
+            partidoAccionesColumn.setMinWidth(78.0);
+            partidoAccionesColumn.setPrefWidth(78.0);
+            partidoAccionesColumn.setMaxWidth(78.0);
             partidoAccionesColumn.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue()));
             partidoAccionesColumn.setCellFactory(column -> new TableCell<Partido, Partido>() {
                 private final Button eliminarButton = crearBotonEliminarIcono("Eliminar partido");
@@ -955,6 +986,21 @@ public class RegistroController {
                 }
             }
         });
+
+        partidoTable.widthProperty().addListener((obs, oldWidth, newWidth) -> ajustarAnchoColumnasPartido());
+        Platform.runLater(this::ajustarAnchoColumnasPartido);
+    }
+
+    private void ajustarAnchoColumnasPartido() {
+        if (partidoTable == null || partidoNombreColumn == null) {
+            return;
+        }
+        double reserved = 24.0;
+        double fixed = 0.0;
+        fixed += partidoOrdenColumn == null ? 0.0 : partidoOrdenColumn.getWidth();
+        fixed += partidoAccionesColumn == null ? 0.0 : partidoAccionesColumn.getWidth();
+        double available = partidoTable.getWidth() - fixed - reserved;
+        partidoNombreColumn.setPrefWidth(Math.max(150.0, available));
     }
 
     private void actualizarPartidoSeleccionadoLabel(Partido partido) {

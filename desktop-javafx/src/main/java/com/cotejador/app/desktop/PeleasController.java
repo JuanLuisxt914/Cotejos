@@ -78,6 +78,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,13 +150,13 @@ public class PeleasController {
     @FXML
     private TableColumn<PeleaFila, String> peleaGallo1Column;
     @FXML
-    private TableColumn<PeleaFila, String> peleaPeso1Column;
+    private TableColumn<PeleaFila, Number> peleaPeso1Column;
     @FXML
     private TableColumn<PeleaFila, String> peleaGallo2Column;
     @FXML
-    private TableColumn<PeleaFila, String> peleaPeso2Column;
+    private TableColumn<PeleaFila, Number> peleaPeso2Column;
     @FXML
-    private TableColumn<PeleaFila, String> peleaDiferenciaColumn;
+    private TableColumn<PeleaFila, Number> peleaDiferenciaColumn;
     @FXML
     private TableColumn<PeleaFila, String> peleaPartidosColumn;
     @FXML
@@ -425,9 +426,10 @@ public class PeleasController {
 
         peleasCotejoTable.setPlaceholder(new Label("No hay peleas generadas todavía."));
         peleasCotejoTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        peleasCotejoTable.setSortPolicy(table -> false);
+        peleasCotejoTable.setSortPolicy(table -> aplicarOrdenTablaPeleas());
 
         if (peleaNumeroColumn != null) {
+            peleaNumeroColumn.setSortable(false);
             peleaNumeroColumn.setResizable(false);
             peleaNumeroColumn.setCellValueFactory(cellData ->
                     new ReadOnlyObjectWrapper<>(peleasCotejoFilas.indexOf(cellData.getValue()) + 1));
@@ -445,7 +447,8 @@ public class PeleasController {
         if (peleaPeso1Column != null) {
             peleaPeso1Column.setResizable(false);
             peleaPeso1Column.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearPesoCompacto(cellData.getValue().getPelea().getGallo1().getPeso())));
+                    new ReadOnlyObjectWrapper<>(cellData.getValue().getPelea().getGallo1().getPeso()));
+            peleaPeso1Column.setCellFactory(column -> crearCeldaPesoNumerica());
         }
         if (peleaGallo2Column != null) {
             peleaGallo2Column.setResizable(false);
@@ -455,12 +458,14 @@ public class PeleasController {
         if (peleaPeso2Column != null) {
             peleaPeso2Column.setResizable(false);
             peleaPeso2Column.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearPesoCompacto(cellData.getValue().getPelea().getGallo2().getPeso())));
+                    new ReadOnlyObjectWrapper<>(cellData.getValue().getPelea().getGallo2().getPeso()));
+            peleaPeso2Column.setCellFactory(column -> crearCeldaPesoNumerica());
         }
         if (peleaDiferenciaColumn != null) {
             peleaDiferenciaColumn.setResizable(false);
             peleaDiferenciaColumn.setCellValueFactory(cellData ->
-                    new ReadOnlyStringWrapper(formatearDiferenciaCompacta(cellData.getValue().getPelea().getDiferenciaPeso())));
+                    new ReadOnlyObjectWrapper<>(cellData.getValue().getPelea().getDiferenciaPeso()));
+            peleaDiferenciaColumn.setCellFactory(column -> crearCeldaPesoNumerica());
         }
         if (peleaPartidosColumn != null) {
             peleaPartidosColumn.setResizable(true);
@@ -498,6 +503,30 @@ public class PeleasController {
 
         configurarColumnaPartidosResponsiva();
         peleasCotejoTable.setRowFactory(table -> crearFilaArrastrable());
+    }
+
+    private boolean aplicarOrdenTablaPeleas() {
+        if (peleasCotejoTable == null || peleasCotejoTable.getComparator() == null) {
+            return true;
+        }
+
+        Comparator<PeleaFila> comparator = peleasCotejoTable.getComparator();
+        List<Pelea> ordenadas = new ArrayList<>(peleasCotejo);
+        Collections.sort(ordenadas, (pelea1, pelea2) ->
+                comparator.compare(new PeleaFila(pelea1, pelea1 == null ? 1 : pelea1.getRonda()),
+                        new PeleaFila(pelea2, pelea2 == null ? 1 : pelea2.getRonda())));
+        peleasCotejo.setAll(ordenadas);
+        return true;
+    }
+
+    private TableCell<PeleaFila, Number> crearCeldaPesoNumerica() {
+        return new TableCell<PeleaFila, Number>() {
+            @Override
+            protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : formatearPesoCompacto(item.doubleValue()));
+            }
+        };
     }
 
     private void initializeDetallePelea() {
@@ -717,6 +746,7 @@ public class PeleasController {
                     resultado.getPeleas(),
                     buildParametrosOrdenamiento(partidos, gallosDelEvento)
             );
+            ordenarPeleasPorRondaAscendente(peleasOrdenadas);
             peleasCotejo.setAll(peleasOrdenadas);
             gallosSinPelea.setAll(resultado.getGallosSinPelea());
 
@@ -1631,6 +1661,22 @@ public class PeleasController {
         return new Pelea(gallo1, gallo2, diferenciaPeso(gallo1, gallo2), ronda);
     }
 
+    private void ordenarPeleasPorRondaAscendente(List<Pelea> peleas) {
+        if (peleas == null) {
+            return;
+        }
+        Collections.sort(peleas, new Comparator<Pelea>() {
+            @Override
+            public int compare(Pelea pelea1, Pelea pelea2) {
+                int rondaCompare = Integer.compare(pelea1.getRonda(), pelea2.getRonda());
+                if (rondaCompare != 0) {
+                    return rondaCompare;
+                }
+                return 0;
+            }
+        });
+    }
+
     private double diferenciaPeso(Gallo gallo1, Gallo gallo2) {
         return Math.abs(gallo1.getPeso() - gallo2.getPeso());
     }
@@ -1748,10 +1794,12 @@ public class PeleasController {
             if (dragboard.hasString() && !row.isEmpty()) {
                 try {
                     int sourceIndex = Integer.parseInt(dragboard.getString());
-                    if (sourceIndex != row.getIndex()) {
+                    if (sourceIndex != row.getIndex() && puedeSoltarPeleaEnFila(sourceIndex, row)) {
                         event.acceptTransferModes(TransferMode.MOVE);
                         boolean dropTop = event.getY() < row.getHeight() / 2.0;
                         setDropIndicators(row, dropTop, !dropTop);
+                    } else {
+                        setDropIndicators(row, false, false);
                     }
                 } catch (NumberFormatException ignored) {
                     // Ignorar datos no válidos.
@@ -1787,8 +1835,7 @@ public class PeleasController {
                     int insertionIndex = event.getY() < row.getHeight() / 2.0
                             ? row.getIndex()
                             : row.getIndex() + 1;
-                    moverPeleaPorArrastre(sourceIndex, insertionIndex);
-                    success = true;
+                    success = moverPeleaPorArrastre(sourceIndex, insertionIndex);
                 } catch (NumberFormatException ignored) {
                     success = false;
                 }
@@ -1835,15 +1882,33 @@ public class PeleasController {
         row.pseudoClassStateChanged(DROP_BOTTOM, bottom);
     }
 
-    private void moverPeleaPorArrastre(int sourceIndex, int insertionIndex) {
+    private boolean puedeSoltarPeleaEnFila(int sourceIndex, TableRow<PeleaFila> targetRow) {
+        if (sourceIndex < 0 || sourceIndex >= peleasCotejo.size() || targetRow == null || targetRow.isEmpty()) {
+            return false;
+        }
+        Pelea source = peleasCotejo.get(sourceIndex);
+        PeleaFila targetFila = targetRow.getItem();
+        Pelea target = targetFila == null ? null : targetFila.getPelea();
+        return source != null && target != null && source.getRonda() == target.getRonda();
+    }
+
+    private boolean moverPeleaPorArrastre(int sourceIndex, int insertionIndex) {
         if (sourceIndex < 0 || sourceIndex >= peleasCotejo.size()) {
-            return;
+            return false;
         }
         if (insertionIndex < 0 || insertionIndex > peleasCotejo.size()) {
-            return;
+            return false;
         }
 
-        Pelea pelea = peleasCotejo.remove(sourceIndex);
+        Pelea pelea = peleasCotejo.get(sourceIndex);
+        if (!puedeMoverPeleaDentroDeRonda(pelea, sourceIndex, insertionIndex)) {
+            if (shellController != null) {
+                shellController.setStatus("Solo puedes mover peleas dentro de la misma ronda.");
+            }
+            return false;
+        }
+
+        peleasCotejo.remove(sourceIndex);
         if (sourceIndex < insertionIndex) {
             insertionIndex--;
         }
@@ -1859,6 +1924,28 @@ public class PeleasController {
             peleasCotejoTable.refresh();
         }
         persistirCotejoEditable("Orden de pelea actualizado.");
+        return true;
+    }
+
+    private boolean puedeMoverPeleaDentroDeRonda(Pelea pelea, int sourceIndex, int insertionIndex) {
+        if (pelea == null) {
+            return false;
+        }
+        int targetIndex = insertionIndex;
+        if (sourceIndex < targetIndex) {
+            targetIndex--;
+        }
+        if (targetIndex < 0) {
+            targetIndex = 0;
+        }
+        if (targetIndex > peleasCotejo.size() - 1) {
+            targetIndex = peleasCotejo.size() - 1;
+        }
+        if (targetIndex == sourceIndex) {
+            return true;
+        }
+        Pelea referencia = peleasCotejo.get(targetIndex);
+        return referencia != null && referencia.getRonda() == pelea.getRonda();
     }
 
     private void rebuildPeleasCotejoFilas() {
@@ -1902,6 +1989,7 @@ public class PeleasController {
             }
 
             List<Pelea> peleasCargadas = toPeleasDesdeGuardado(detalle.getPeleas());
+            ordenarPeleasPorRondaAscendente(peleasCargadas);
             List<Gallo> gallosSinPeleaCargados = toGallosSinPeleaDesdeGuardado(detalle.getGallosSinPelea());
             cargarRondasDesdeCotejoGuardado(detalle);
             peleasCotejo.setAll(peleasCargadas);

@@ -19,6 +19,9 @@ import javafx.scene.layout.VBox;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class EventosController {
 
@@ -184,7 +187,9 @@ public class EventosController {
 
     public void loadEventos(Long selectedId) {
         try {
-            eventos.setAll(eventoRepository.listarTodos());
+            List<Evento> eventosOrdenados = new ArrayList<>(eventoRepository.listarTodos());
+            eventosOrdenados.sort(Comparator.comparing(Evento::getId, Comparator.nullsLast(Comparator.reverseOrder())));
+            eventos.setAll(eventosOrdenados);
             selectEventoById(selectedId);
         } catch (Exception e) {
             shellController.showError("Error al cargar eventos", e);

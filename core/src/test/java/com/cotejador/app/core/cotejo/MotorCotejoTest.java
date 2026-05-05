@@ -230,8 +230,8 @@ public class MotorCotejoTest {
         );
 
         assertEquals(1, resultado.getPeleas().size());
-        assertPelea(resultado.getPeleas().get(0), 1L, 3L, 3);
-        assertIds(resultado.getGallosSinPelea(), 2L);
+        assertPelea(resultado.getPeleas().get(0), 2L, 3L, 2);
+        assertIds(resultado.getGallosSinPelea(), 1L);
     }
 
     @Test
@@ -288,8 +288,8 @@ public class MotorCotejoTest {
         );
 
         assertEquals(1, resultado.getPeleas().size());
-        assertPelea(resultado.getPeleas().get(0), 1L, 3L, 3);
-        assertIds(resultado.getGallosSinPelea(), 2L);
+        assertPelea(resultado.getPeleas().get(0), 2L, 3L, 2);
+        assertIds(resultado.getGallosSinPelea(), 1L);
     }
 
     @Test
@@ -356,12 +356,196 @@ public class MotorCotejoTest {
         assertNoRepeatedIds(resultado.getPeleas());
     }
 
+    @Test
+    public void enModoAleatorioIncluyeObligatoriosPorDefecto() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        galloObligatorio(1L, "A1", 1000, 10L),
+                        gallo(2L, "B1", 1001, 20L)
+                ),
+                parametrosConModo(5, ModoCotejo.ALEATORIO)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 2L, 1);
+        assertEquals(0, resultado.getGallosSinPelea().size());
+    }
+
+    @Test
+    public void enModoAleatorioExcluyeObligatoriosSoloSiLaReglaEstaActiva() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        galloObligatorio(1L, "A1", 1000, 10L),
+                        gallo(2L, "B1", 1001, 20L),
+                        gallo(3L, "C1", 1002, 30L)
+                ),
+                parametrosConModo(5, ModoCotejo.ALEATORIO, true)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertIds(resultado.getGallosSinPelea(), 1L);
+        assertNoRepeatedIds(resultado.getPeleas());
+    }
+
+    @Test
+    public void enModoAleatorioUltimaRondaObligatoriaNoExcluyeObligatorios() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        galloObligatorio(1L, "A1", 1000, 10L),
+                        gallo(2L, "B1", 1001, 20L)
+                ),
+                parametrosConUltimaRondaObligatoria(5, ModoCotejo.ALEATORIO)
+        );
+
+        assertEquals(1, resultado.getPeleas().size());
+        assertPelea(resultado.getPeleas().get(0), 1L, 2L, 1);
+        assertEquals(0, resultado.getGallosSinPelea().size());
+    }
+
+    @Test
+    public void enModoAleatorioPriorizaMayorCantidadDePeleasSobreMejorRivalIndividual() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, "A", 1000, 10L),
+                        gallo(2L, "B", 1001, 20L),
+                        gallo(3L, "C", 1005, 30L),
+                        gallo(4L, "D", 1006, 30L)
+                ),
+                parametrosConModo(5, ModoCotejo.ALEATORIO)
+        );
+
+        assertEquals(2, resultado.getPeleas().size());
+        assertEquals(0, resultado.getGallosSinPelea().size());
+        assertNoRepeatedIds(resultado.getPeleas());
+    }
+
+    @Test
+    public void enModoRondasTambienPriorizaMayorCantidadDePeleasPorRonda() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, 1000, 10L, 1),
+                        gallo(2L, 1004, 20L, 1),
+                        gallo(3L, 1001, 30L, 1),
+                        gallo(4L, 1005, 40L, 1)
+                ),
+                new ParametrosCotejo(
+                        4,
+                        Collections.<Long, String>emptyMap(),
+                        Arrays.asList(
+                                restriccion(20L, 30L),
+                                restriccion(20L, 40L)
+                        ),
+                        3,
+                        0,
+                        false,
+                        ModoCotejo.RONDAS,
+                        false
+                )
+        );
+
+        assertEquals(2, resultado.getPeleas().size());
+        assertEquals(0, resultado.getGallosSinPelea().size());
+        assertNoRepeatedIds(resultado.getPeleas());
+        for (Pelea pelea : resultado.getPeleas()) {
+            assertEquals(1, pelea.getRonda());
+        }
+    }
+
+    @Test
+    public void enModoRondasAgrupaPorEntradaYNoPorPartidoCompleto() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, 1000, 10L, 1),
+                        gallo(2L, 1002, 10L, 2),
+                        gallo(3L, 1004, 10L, 3),
+                        gallo(4L, 1010, 10L, 4),
+                        gallo(5L, 1012, 10L, 5),
+                        gallo(6L, 1014, 10L, 6),
+                        gallo(7L, 1001, 20L, 1),
+                        gallo(8L, 1003, 20L, 2),
+                        gallo(9L, 1005, 20L, 3),
+                        gallo(10L, 1011, 20L, 4),
+                        gallo(11L, 1013, 20L, 5),
+                        gallo(12L, 1015, 20L, 6)
+                ),
+                parametrosConModo(5, ModoCotejo.RONDAS)
+        );
+
+        assertEquals(6, resultado.getPeleas().size());
+        for (Pelea pelea : resultado.getPeleas()) {
+            assertTrue("No debe generar rondas mayores a 3", pelea.getRonda() <= 3);
+        }
+        assertEquals(1, resultado.getRondasPorGalloId().get(1L).intValue());
+        assertEquals(2, resultado.getRondasPorGalloId().get(2L).intValue());
+        assertEquals(3, resultado.getRondasPorGalloId().get(3L).intValue());
+        assertEquals(1, resultado.getRondasPorGalloId().get(4L).intValue());
+        assertEquals(2, resultado.getRondasPorGalloId().get(5L).intValue());
+        assertEquals(3, resultado.getRondasPorGalloId().get(6L).intValue());
+    }
+
+    @Test
+    public void enModoRondasConObligatorioExcluidoSoloCotejaRondasRegulares() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, 1000, 10L, 1),
+                        gallo(2L, 1002, 10L, 2),
+                        galloObligatorio(3L, 1004, 10L, 3),
+                        gallo(4L, 1001, 20L, 1),
+                        gallo(5L, 1003, 20L, 2),
+                        galloObligatorio(6L, 1005, 20L, 3)
+                ),
+                parametrosConModo(5, ModoCotejo.RONDAS, true)
+        );
+
+        assertEquals(2, resultado.getPeleas().size());
+        for (Pelea pelea : resultado.getPeleas()) {
+            assertTrue(pelea.getRonda() == 1 || pelea.getRonda() == 2);
+        }
+        assertIds(resultado.getGallosSinPelea(), 3L, 6L);
+        assertEquals(3, resultado.getRondasPorGalloId().get(3L).intValue());
+        assertEquals(3, resultado.getRondasPorGalloId().get(6L).intValue());
+    }
+
+    @Test
+    public void enModoRondasConObligatorioUltimaRondaCotejaObligatoriosEnRondaFinal() {
+        ResultadoCotejo resultado = motorCotejo.cotejar(
+                Arrays.asList(
+                        gallo(1L, 1000, 10L, 1),
+                        gallo(2L, 1002, 10L, 2),
+                        galloObligatorio(3L, 1004, 10L, 3),
+                        gallo(4L, 1001, 20L, 1),
+                        gallo(5L, 1003, 20L, 2),
+                        galloObligatorio(6L, 1005, 20L, 3)
+                ),
+                parametrosConUltimaRondaObligatoria(5, ModoCotejo.RONDAS)
+        );
+
+        assertEquals(3, resultado.getPeleas().size());
+        assertEquals(0, resultado.getGallosSinPelea().size());
+        boolean hayPeleaRondaFinal = false;
+        for (Pelea pelea : resultado.getPeleas()) {
+            assertTrue("No debe generar rondas mayores a 3", pelea.getRonda() <= 3);
+            hayPeleaRondaFinal = hayPeleaRondaFinal || pelea.getRonda() == 3;
+        }
+        assertTrue(hayPeleaRondaFinal);
+        assertEquals(3, resultado.getRondasPorGalloId().get(3L).intValue());
+        assertEquals(3, resultado.getRondasPorGalloId().get(6L).intValue());
+    }
+
     private Gallo gallo(Long id, String nombre, double peso, Long partidoId) {
         return new Gallo(id, peso, "", partidoId);
     }
 
     private Gallo galloObligatorio(Long id, String nombre, double peso, Long partidoId) {
         return new Gallo(id, peso, "", partidoId, true);
+    }
+
+    private Gallo gallo(Long id, double peso, Long partidoId, int ordenRegistro) {
+        return new Gallo(id, peso, "", partidoId, false, ordenRegistro);
+    }
+
+    private Gallo galloObligatorio(Long id, double peso, Long partidoId, int ordenRegistro) {
+        return new Gallo(id, peso, "", partidoId, true, ordenRegistro);
     }
 
     private RestriccionPartido restriccion(Long partidoOrigenId, Long partidoDestinoId) {
@@ -408,6 +592,19 @@ public class MotorCotejoTest {
                 false,
                 modoCotejo,
                 excluirObligatorios
+        );
+    }
+
+    private ParametrosCotejo parametrosConUltimaRondaObligatoria(double tolerancia, ModoCotejo modoCotejo) {
+        return new ParametrosCotejo(
+                tolerancia,
+                Collections.<Long, String>emptyMap(),
+                Collections.<RestriccionPartido>emptyList(),
+                3,
+                1,
+                true,
+                modoCotejo,
+                false
         );
     }
 

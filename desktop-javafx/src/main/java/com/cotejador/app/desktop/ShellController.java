@@ -264,6 +264,21 @@ public class ShellController {
         }
     }
 
+    public void refrescarInfoEventoActual() {
+        if (currentEvento == null) {
+            updateEventInfo(null, ModoCotejo.ALEATORIO);
+            return;
+        }
+        ModoCotejo modoCotejo = ModoCotejo.ALEATORIO;
+        if (peleasController != null) {
+            ModoCotejo modoSeleccionado = peleasController.getModoCotejoSeleccionado();
+            if (modoSeleccionado != null) {
+                modoCotejo = modoSeleccionado;
+            }
+        }
+        updateEventInfo(currentEvento, modoCotejo);
+    }
+
     private void updateEventInfo(Evento evento, ModoCotejo modoCotejo) {
         if (eventInfoBar == null) {
             return;
